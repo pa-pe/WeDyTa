@@ -1,6 +1,6 @@
 package wedyta
 
-func (c *RenderTableImpl) breadcrumbBuilder(config *modelConfig) string {
+func (c *Impl) breadcrumbBuilder(config *modelConfig) string {
 	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="/">Home</a></li>` + "\n"

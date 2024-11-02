@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (c *RenderTableImpl) loadModelConfig(context *gin.Context, modelName string, payload map[string]interface{}) (*modelConfig, error) {
+func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload map[string]interface{}) (*modelConfig, error) {
 	configPath := "config/renderModelTable/" + modelName + ".json"
 
 	data, err := os.ReadFile(configPath)

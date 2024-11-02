@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (c *RenderTableImpl) RenderTable(context *gin.Context) {
+func (c *Impl) RenderTable(context *gin.Context) {
 	//todo
 	//currentAuthUser := web.GetCurrentAuthUser(context)
 	modelName := context.Param("modelName")
@@ -38,7 +38,7 @@ func (c *RenderTableImpl) RenderTable(context *gin.Context) {
 	})
 }
 
-func (c *RenderTableImpl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
+func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
 	if config == nil || modelName == "" {
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}

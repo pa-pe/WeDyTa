@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func (c *RenderTableImpl) HandleRenderTableAddRecord(context *gin.Context) {
+func (c *Impl) HandleRenderTableAddRecord(context *gin.Context) {
 	//todo
 	//currentAuthUser := web.GetCurrentAuthUser(context)
 	//if currentAuthUser.Role != "admin" {
@@ -48,8 +48,6 @@ func (c *RenderTableImpl) HandleRenderTableAddRecord(context *gin.Context) {
 		}
 	}
 
-	//	fmt.Println(insertData)
-
 	// check RequiredFields
 	for _, requiredField := range config.RequiredFields {
 		if value, exists := payload[requiredField]; !exists || value == "" {
@@ -81,7 +79,7 @@ func (c *RenderTableImpl) HandleRenderTableAddRecord(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-func (c *RenderTableImpl) RenderAddForm(context *gin.Context, config *modelConfig, modelName string) string {
+func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelName string) string {
 	if config == nil || len(config.AddableFields) == 0 {
 		return ""
 	}

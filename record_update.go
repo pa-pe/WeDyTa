@@ -9,7 +9,7 @@ import (
 )
 
 // Update updates the fields of a specified model based on the allowedFields
-func (c *RenderTableImpl) Update(context *gin.Context) {
+func (c *Impl) Update(context *gin.Context) {
 	//todo
 	//currentAuthUser := web.GetCurrentAuthUser(context)
 	//if currentAuthUser.Role != "admin" {

@@ -5,12 +5,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type RenderTableImpl struct {
+type Impl struct {
 	DB     *gorm.DB
 	Config *RenderDbTableConfig
 }
 
-func New(db *gorm.DB, config *RenderDbTableConfig) *RenderTableImpl {
+func New(db *gorm.DB, config *RenderDbTableConfig) *Impl {
 	if config == nil {
 		// default if no config
 		config = &RenderDbTableConfig{
@@ -20,7 +20,7 @@ func New(db *gorm.DB, config *RenderDbTableConfig) *RenderTableImpl {
 		}
 	}
 
-	return &RenderTableImpl{
+	return &Impl{
 		DB:     db,
 		Config: config,
 	}
