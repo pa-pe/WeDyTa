@@ -11,10 +11,10 @@ import (
 func (c *RenderTableImpl) HandleRenderTableAddRecord(context *gin.Context) {
 	//todo
 	//currentAuthUser := web.GetCurrentAuthUser(context)
-	if currentAuthUser.Role != "admin" {
-		context.AbortWithStatus(http.StatusForbidden)
-		return
-	}
+	//if currentAuthUser.Role != "admin" {
+	//	context.AbortWithStatus(http.StatusForbidden)
+	//	return
+	//}
 
 	var payload map[string]interface{}
 	if err := context.ShouldBindJSON(&payload); err != nil {
@@ -38,7 +38,7 @@ func (c *RenderTableImpl) HandleRenderTableAddRecord(context *gin.Context) {
 	insertData := make(map[string]interface{})
 	for _, field := range config.AddableFields {
 		if value, exists := payload[field]; exists {
-			insertData[utils.CamelToSnake(field)] = value
+			insertData[CamelToSnake(field)] = value
 		}
 	}
 
