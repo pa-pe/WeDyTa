@@ -2,8 +2,10 @@ package wedyta
 
 import "github.com/gin-gonic/gin"
 
-type RenderDbTableConfig struct {
-	AccessCheckFunc func(context *gin.Context, modelName, action, fieldName string) bool
+type Config struct {
+	PreparePageVariables func(context *gin.Context, modelName string) map[string]any
+	AccessCheckFunc      func(context *gin.Context, modelName, action, fieldName string) bool
+	Template             string
 }
 
 type modelConfig struct {

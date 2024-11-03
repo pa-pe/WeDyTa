@@ -11,9 +11,12 @@ import (
 )
 
 func (c *Impl) RenderTable(context *gin.Context) {
-	//todo
-	//currentAuthUser := web.GetCurrentAuthUser(context)
 	modelName := context.Param("modelName")
+
+	if c.Config.AccessCheckFunc(context, modelName, "read", "") != true {
+		context.String(http.StatusForbidden, "No access RenderTable: "+modelName)
+		return
+	}
 
 	config, err := c.loadModelConfig(context, modelName, nil)
 	if err != nil {
@@ -30,12 +33,22 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		return
 	}
 
-	context.HTML(http.StatusOK, "render_model_table.tmpl", gin.H{
+	ginH := gin.H{
 		"Title": config.PageTitle,
-		//todo
 		//"CurrentUser": currentAuthUser.Username,
 		"Content": template.HTML(htmlTable),
-	})
+	}
+	ginHAdd := c.Config.PreparePageVariables(context, modelName)
+	_ = ginHAdd
+	for val, key := range ginHAdd {
+		fmt.Println(val, key)
+		ginH[val] = key
+	}
+
+	//ginH["Title"] = config.PageTitle
+	//ginH["Content"] = template.HTML(htmlTable)
+
+	context.HTML(http.StatusOK, c.Config.Template, ginH)
 }
 
 func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
@@ -49,12 +62,12 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 	}
 
 	var htmlTable strings.Builder
-	htmlTable.WriteString(`<link rel="stylesheet" href="/static/css/render_table.css">` + "\n")
+	htmlTable.WriteString(`<link rel="stylesheet" href="/wedyta/static/css/render_table.css">` + "\n")
 
 	if len(config.EditableFields) > 0 {
 		htmlTable.WriteString(`
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="/static/js/tbl_update_fld.js"></script>
+<script src="/wedyta/static/js/tbl_update_fld.js"></script>
 `)
 	}
 
