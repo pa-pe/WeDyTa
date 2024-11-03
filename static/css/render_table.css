@@ -14,3 +14,5 @@ tr.disabled {
     --bs-table-striped-bg: rgba(0, 0, 0, 0.05);
     --bs-table-striped-color: inherit;
 }
+
+.white-space-pre { white-space: pre; }
