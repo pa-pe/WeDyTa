@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 formObject[key] = value;
             });
 
-            fetch("/render_table/add/", {
+            fetch("/wedyta/add/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
