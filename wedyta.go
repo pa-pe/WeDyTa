@@ -27,6 +27,10 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 		}
 	}
 
+	if config.HeadersTag == "" {
+		config.HeadersTag = "h2"
+	}
+
 	impl := &Impl{
 		DB:     db,
 		Config: config,

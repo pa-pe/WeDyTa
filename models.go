@@ -6,6 +6,7 @@ type Config struct {
 	PreparePageVariables func(context *gin.Context, modelName string) map[string]any
 	AccessCheckFunc      func(context *gin.Context, modelName, action, fieldName string) bool
 	Template             string
+	HeadersTag           string
 }
 
 type modelConfig struct {

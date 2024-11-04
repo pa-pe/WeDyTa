@@ -71,7 +71,7 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 `)
 	}
 
-	htmlTable.WriteString(`<h2>` + config.PageTitle + `</h2>` + "\n")
+	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(c.breadcrumbBuilder(config))
 	htmlTable.WriteString(c.RenderAddForm(context, config, modelName))
 

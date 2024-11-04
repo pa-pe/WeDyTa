@@ -89,11 +89,11 @@ func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelNam
 <link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
 	<div class="accordion" id="addFormAccordion">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="addFormHeading">
+            <` + c.Config.HeadersTag + ` class="accordion-header" id="addFormHeading">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#addFormCollapse" aria-expanded="false" aria-controls="addFormCollapse">
                     <i class="bi-plus-square"></i> &nbsp; Add New Record
                 </button>
-            </h2>
+            </` + c.Config.HeadersTag + `>
             <div id="addFormCollapse" class="accordion-collapse collapse" aria-labelledby="addFormHeading" data-bs-parent="#addFormAccordion">
                 <div class="accordion-body" style="background: #e5eeff;">
 `)
