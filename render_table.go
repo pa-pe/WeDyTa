@@ -62,12 +62,12 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 	}
 
 	var htmlTable strings.Builder
-	htmlTable.WriteString(`<link rel="stylesheet" href="/wedyta/static/css/render_table.css">` + "\n")
+	htmlTable.WriteString(`<link rel="stylesheet" href="/wedyta/static/css/wedyta.css">` + "\n")
 
 	if len(config.EditableFields) > 0 {
 		htmlTable.WriteString(`
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="/wedyta/static/js/tbl_update_fld.js"></script>
+<script src="/wedyta/static/js/wedyta_update.js"></script>
 `)
 	}
 

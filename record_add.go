@@ -85,8 +85,8 @@ func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelNam
 	}
 
 	var formBuilder strings.Builder
-	formBuilder.WriteString(`<script src="/static/js/render_table_add.js"></script>
-<link rel="stylesheet" href="/static/css/render_table_add.css">
+	formBuilder.WriteString(`<script src="/wedyta/static/js/wedyta_create.js"></script>
+<link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
 	<div class="accordion" id="addFormAccordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="addFormHeading">
