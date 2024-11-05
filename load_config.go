@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload map[string]interface{}) (*modelConfig, error) {
-	configPath := "config/renderModelTable/" + modelName + ".json"
+	configPath := c.Config.ConfigDir + "/" + modelName + ".json"
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {

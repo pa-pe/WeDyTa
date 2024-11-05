@@ -13,7 +13,7 @@ import (
 func (c *Impl) RenderTable(context *gin.Context) {
 	modelName := context.Param("modelName")
 
-	if c.Config.AccessCheckFunc(context, modelName, "read", "") != true {
+	if c.Config.AccessCheckFunc(context, modelName, "", "read") != true {
 		context.String(http.StatusForbidden, "No access RenderTable: "+modelName)
 		return
 	}
@@ -38,7 +38,7 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		//"CurrentUser": currentAuthUser.Username,
 		"Content": template.HTML(htmlTable),
 	}
-	ginHAdd := c.Config.PreparePageVariables(context, modelName)
+	ginHAdd := c.Config.PrepareTemplateVariables(context, modelName)
 	_ = ginHAdd
 	for val, key := range ginHAdd {
 		fmt.Println(val, key)

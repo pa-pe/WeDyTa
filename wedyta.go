@@ -27,6 +27,10 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 		}
 	}
 
+	if config.ConfigDir == "" {
+		config.ConfigDir = "config/wedyta"
+	}
+
 	if config.HeadersTag == "" {
 		config.HeadersTag = "h2"
 	}
