@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-//go:embed static/*
+//go:embed static/* templates/default.tmpl
 var embeddedFiles embed.FS
 
 type Impl struct {

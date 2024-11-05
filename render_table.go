@@ -33,22 +33,35 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		return
 	}
 
-	ginH := gin.H{
-		"Title": config.PageTitle,
-		//"CurrentUser": currentAuthUser.Username,
-		"Content": template.HTML(htmlTable),
-	}
-	ginHAdd := c.Config.PrepareTemplateVariables(context, modelName)
-	_ = ginHAdd
-	for val, key := range ginHAdd {
-		fmt.Println(val, key)
-		ginH[val] = key
-	}
+	if c.Config.Template != "" {
+		ginH := gin.H{
+			"Title":   config.PageTitle,
+			"Content": template.HTML(htmlTable),
+		}
 
-	//ginH["Title"] = config.PageTitle
-	//ginH["Content"] = template.HTML(htmlTable)
+		ginHAdd := c.Config.PrepareTemplateVariables(context, modelName)
+		for val, key := range ginHAdd {
+			fmt.Println(val, key)
+			ginH[val] = key
+		}
 
-	context.HTML(http.StatusOK, c.Config.Template, ginH)
+		//ginH["Title"] = config.PageTitle
+
+		context.HTML(http.StatusOK, c.Config.Template, ginH)
+	} else {
+		content, err := embeddedFiles.ReadFile("templates/default.tmpl")
+		if err != nil {
+			context.String(http.StatusInternalServerError, "Failed to load vedyta default template")
+			return
+		}
+
+		templateContent := string(content)
+
+		templateContent = strings.Replace(templateContent, "{{ .Title }}", config.PageTitle, -1)
+		templateContent = strings.Replace(templateContent, "{{ .Content }}", htmlTable, -1)
+
+		context.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
+	}
 }
 
 func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
