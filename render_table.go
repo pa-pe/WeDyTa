@@ -158,10 +158,8 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 				//relatedDataField = utils.CamelToSnake(relatedDataField)
 				cacheKey := fmt.Sprintf("%s_%v", relatedDataField, value)
 				if cachedValue, found := relatedDataCache[cacheKey]; found {
-					// Используем значение из кэша
 					value = cachedValue
 				} else {
-					// Выполняем запрос к базе данных и добавляем в кэш
 					if num, ok := value.(int64); ok && num != 0 {
 						var relatedValue string
 						err := db.Debug().Table(strings.Split(relatedDataField, ".")[0]).
@@ -180,11 +178,11 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 			}
 
 			if countConfig, countExists := config.CountRelatedData[field]; countExists {
-				foreignKeyValue, ok := record[countConfig.ForeignKey]
+				foreignKeyValue, ok := record[countConfig.LocalFieldID]
 				var count int64
 				if ok {
 					if err := db.Debug().Table(countConfig.Table).
-						Where(fmt.Sprintf("%s = ?", countConfig.ForeignKey), foreignKeyValue).
+						Where(fmt.Sprintf("%s = ?", countConfig.TargetFieldID), foreignKeyValue).
 						Count(&count).Error; err == nil {
 					}
 				}

@@ -43,8 +43,9 @@ type modelConfig struct {
 }
 
 type CountRelatedDataConfig struct {
-	Table      string `json:"table"`
-	ForeignKey string `json:"foreignKey"`
+	LocalFieldID  string `json:"localFieldID"`
+	Table         string `json:"table"`
+	TargetFieldID string `json:"targetFieldID"`
 }
 
 type LinkConfig struct {
