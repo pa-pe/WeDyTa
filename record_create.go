@@ -8,14 +8,7 @@ import (
 	"strings"
 )
 
-func (c *Impl) HandleRenderTableAddRecord(context *gin.Context) {
-	//todo
-	//currentAuthUser := web.GetCurrentAuthUser(context)
-	//if currentAuthUser.Role != "admin" {
-	//	context.AbortWithStatus(http.StatusForbidden)
-	//	return
-	//}
-
+func (c *Impl) HandleTableCreateRecord(context *gin.Context) {
 	var payload map[string]interface{}
 	if err := context.ShouldBindJSON(&payload); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
@@ -25,6 +18,11 @@ func (c *Impl) HandleRenderTableAddRecord(context *gin.Context) {
 	modelName, ok := payload["modelName"].(string)
 	if !ok {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
+		return
+	}
+
+	if c.Config.AccessCheckFunc(context, modelName, "", "create") != true {
+		context.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
 		return
 	}
 

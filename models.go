@@ -1,6 +1,9 @@
 package wedyta
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
 
 type Config struct {
 	// Path to the folder where json configurations are located.
@@ -20,6 +23,13 @@ type Config struct {
 
 	// HeadersTag default 'h2'
 	HeadersTag string
+
+	BeforeCreate func(context *gin.Context, db *gorm.DB, table string, id int64)
+	BeforeUpdate func(context *gin.Context, db *gorm.DB, table string, id int64, field string)
+	BeforeDelete func(context *gin.Context, db *gorm.DB, table string, id int64)
+	AfterCreate  func(context *gin.Context, db *gorm.DB, table string, id int64)
+	AfterUpdate  func(context *gin.Context, db *gorm.DB, table string, id int64, field string, valueBeforeUpdate string, valueAfterUpdate string)
+	AfterDelete  func(context *gin.Context, db *gorm.DB, table string, id int64)
 }
 
 type modelConfig struct {
@@ -50,14 +60,4 @@ type CountRelatedDataConfig struct {
 
 type LinkConfig struct {
 	Template string `json:"template"`
-}
-
-type DbChanges struct {
-	ID             int64  `gorm:"primaryKey;autoIncrement" json:"internal_id"`
-	WebUserID      int    `gorm:"not null;default:0" json:"web_user_id"`
-	ModelName      string `gorm:"not null" json:"model_name"`
-	IdOfRecord     int    `gorm:"not null;default:0" json:"id_of_record"`
-	DataFrom       string `gorm:"not null" json:"data_from"`
-	DataTo         string `gorm:"not null" json:"data_to"`
-	AddedTimestamp int64  `gorm:"autoCreateTime" json:"added_timestamp"`
 }

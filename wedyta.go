@@ -51,7 +51,7 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 	//wedytaGroup.StaticFS("/static", http.FS(embeddedFiles))
 	wedytaGroup.StaticFS("/static", http.FS(staticFiles))
 	wedytaGroup.GET("/:modelName", impl.RenderTable)
-	wedytaGroup.POST("/add", impl.HandleRenderTableAddRecord)
+	wedytaGroup.POST("/add", impl.HandleTableCreateRecord)
 	wedytaGroup.POST("/update", impl.Update)
 
 	return impl

@@ -10,13 +10,6 @@ import (
 
 // Update updates the fields of a specified model based on the allowedFields
 func (c *Impl) Update(context *gin.Context) {
-	//todo
-	//currentAuthUser := web.GetCurrentAuthUser(context)
-	//if currentAuthUser.Role != "admin" {
-	//	context.AbortWithStatus(http.StatusForbidden)
-	//	return
-	//}
-
 	var payload map[string]interface{}
 	if err := context.ShouldBindJSON(&payload); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
@@ -26,6 +19,11 @@ func (c *Impl) Update(context *gin.Context) {
 	modelName, ok := payload["modelName"].(string)
 	if !ok {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
+		return
+	}
+
+	if c.Config.AccessCheckFunc(context, modelName, "", "update") != true {
+		context.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
 		return
 	}
 
@@ -106,20 +104,11 @@ func (c *Impl) Update(context *gin.Context) {
 		return
 	}
 
-	// Log each change to DbChanges
-	for field, newValue := range updateData {
-		originalValue, exists := originalData[field]
-		if exists && originalValue != newValue {
-			dbChange := DbChanges{
-				//todo
-				//WebUserID:  currentAuthUser.ID,
-				ModelName:  modelName + "." + field,
-				IdOfRecord: int(int64(id)),
-				DataFrom:   fmt.Sprintf("%v", originalValue),
-				DataTo:     fmt.Sprintf("%v", newValue),
-			}
-			if err := c.DB.Create(&dbChange).Error; err != nil {
-				log.Printf("Failed to log change for field %s: %v", field, err)
+	if c.Config.AfterUpdate != nil {
+		for field, newValue := range updateData {
+			originalValue, exists := originalData[field]
+			if exists && originalValue != newValue {
+				go c.Config.AfterUpdate(context, c.DB, config.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
 			}
 		}
 	}
