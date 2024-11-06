@@ -41,11 +41,7 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		//ginH["Title"] = config.PageTitle
 
 		if c.Config.PrepareTemplateVariables != nil {
-			ginHAdd := c.Config.PrepareTemplateVariables(context, modelName)
-			for val, key := range ginHAdd {
-				fmt.Println(val, key)
-				ginH[val] = key
-			}
+			c.Config.PrepareTemplateVariables(context, modelName, ginH)
 		}
 
 		context.HTML(http.StatusOK, c.Config.Template, ginH)
