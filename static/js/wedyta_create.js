@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     if (data.success) {
                         alert("Record added successfully");
-                        location.reload();
+                        // location.reload();
+                        window.location.href = window.location.pathname + window.location.search + window.location.hash;
                     } else {
                         alert("Failed to add record: " + (data.error || "Unknown error"));
                     }
