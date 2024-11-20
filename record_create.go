@@ -107,7 +107,7 @@ func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelNam
 
 	countFields := 0
 	for _, field := range config.AddableFields {
-		if c.Config.AccessCheckFunc(context, modelName, field, "add") != true {
+		if c.Config.AccessCheckFunc(context, modelName, field, "create") != true {
 			continue
 		}
 

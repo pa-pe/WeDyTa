@@ -3,7 +3,7 @@ const iconSuccess = '<i class="bi-check-circle" style="color: green;"></i>';
 const iconLoading = '<i class="bi-arrow-repeat" style="color: blue;"></i>';
 const iconFail = '<i class="bi-x-circle" style="color: red;"></i>';
 
-function send_update_data(data){
+function send_update_data(data) {
     let query_result = -1;
 
     // fetch('/update_model', {
@@ -14,24 +14,27 @@ function send_update_data(data){
         },
         body: JSON.stringify(data),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            query_result = 1;
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                query_result = 1;
 //            statusContainer.animShow(iconSuccess);
 //alert("update ok");
-            location.reload();
-        } else {
-            query_result = 0;
+                location.reload();
+            } else {
+                query_result = 0;
 //            statusContainer.animShow(iconFail);
-            alert('Failed to update: ' + (data.error || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        query_result = 0;
+                alert('Failed to update: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            query_result = 0;
 //        statusContainer.animShow(iconFail);
-        alert('Error: ' + error);
-    });
+            alert('Error: ' + error);
+        });
+
+    let success_update = query_result > 0;
+    return success_update;
 }
 
 function showQueuedAnim(name, tagCont, doFunc) {
@@ -44,7 +47,7 @@ function showQueuedAnim(name, tagCont, doFunc) {
 
 function animHideElement(element, animTime, tagCont, callback) {
     $(tagCont).addClass("change_animation_progress");
-    $(element).animate({ opacity: 0 }, animTime, function() {
+    $(element).animate({opacity: 0}, animTime, function () {
         element.style.display = "none";
         $(tagCont).removeClass("change_animation_progress");
         if (callback) callback();
@@ -52,10 +55,10 @@ function animHideElement(element, animTime, tagCont, callback) {
 }
 
 function animShowElement(element, animTime, tagCont) {
-    showQueuedAnim("animShow", tagCont, function() {
+    showQueuedAnim("animShow", tagCont, function () {
         element.style.display = "block";
         $(tagCont).addClass("change_animation_progress");
-        $(element).animate({ opacity: 1 }, animTime, function() {
+        $(element).animate({opacity: 1}, animTime, function () {
             $(tagCont).removeClass("change_animation_progress");
         });
     });
@@ -63,9 +66,9 @@ function animShowElement(element, animTime, tagCont) {
 
 function animHideStatusContainer(statusContainer, animTime, tagCont) {
     if (statusContainer.style.display !== "none") {
-        showQueuedAnim("hide-cont", tagCont, function() {
+        showQueuedAnim("hide-cont", tagCont, function () {
             $(tagCont).addClass("change_animation_progress");
-            $(statusContainer).animate({ opacity: 0 }, animTime, function() {
+            $(statusContainer).animate({opacity: 0}, animTime, function () {
                 statusContainer.style.display = "none";
                 statusContainer.innerHTML = '';
                 $(tagCont).removeClass("change_animation_progress");
@@ -77,12 +80,12 @@ function animHideStatusContainer(statusContainer, animTime, tagCont) {
 function animShowStatusContainer(statusContainer, iconTag, animTime, tagCont, dropdown) {
     animHideStatusContainer(statusContainer, animTime, tagCont);
 
-    showQueuedAnim("show-success", tagCont, function() {
+    showQueuedAnim("show-success", tagCont, function () {
         $(tagCont).addClass("change_animation_progress");
         statusContainer.style.opacity = "0";
         statusContainer.innerHTML = iconTag;
         statusContainer.style.display = "block";
-        $(statusContainer).animate({ opacity: 1 }, animTime, function() {
+        $(statusContainer).animate({opacity: 1}, animTime, function () {
             $(tagCont).removeClass("change_animation_progress");
 
             if (iconTag === iconSuccess) {
@@ -92,7 +95,6 @@ function animShowStatusContainer(statusContainer, iconTag, animTime, tagCont, dr
         });
     });
 }
-
 
 
 $(document).ready(function () {
@@ -139,9 +141,11 @@ $(document).ready(function () {
             // console.log(formData);
             let formDataJson = serializeFormToJson(form);
             // console.log(formDataJson);
-            send_update_data(formDataJson);
-            let newContent = $('#editTextarea').val();
-            currentTd.text(newContent);
+            let success_update = send_update_data(formDataJson);
+            if (success_update) {
+                let newContent = $('#editTextarea').val();
+                currentTd.text(newContent);
+            }
             $('#editModal').modal('hide');
         });
 

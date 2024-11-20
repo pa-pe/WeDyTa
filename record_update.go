@@ -23,7 +23,8 @@ func (c *Impl) Update(context *gin.Context) {
 	}
 
 	if c.Config.AccessCheckFunc(context, modelName, "", "update") != true {
-		context.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
+		//context.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
+		context.JSON(http.StatusForbidden, gin.H{"error": "Access denied", "modelName": "$modelName"})
 		return
 	}
 
