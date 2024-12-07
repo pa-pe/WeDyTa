@@ -43,6 +43,10 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 		config.BreadcrumbsRootUrl = "/"
 	}
 
+	if config.BreadcrumbsDivider == "" {
+		config.BreadcrumbsDivider = ">"
+	}
+
 	impl := &Impl{
 		DB:     db,
 		Config: config,

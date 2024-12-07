@@ -30,6 +30,9 @@ type Config struct {
 	// BreadcrumbsRootUrl default '/'
 	BreadcrumbsRootUrl string
 
+	// BreadcrumbsDivider default '>'
+	BreadcrumbsDivider string
+
 	BeforeCreate func(context *gin.Context, db *gorm.DB, table string, id int64)
 	BeforeUpdate func(context *gin.Context, db *gorm.DB, table string, id int64, field string)
 	BeforeDelete func(context *gin.Context, db *gorm.DB, table string, id int64)

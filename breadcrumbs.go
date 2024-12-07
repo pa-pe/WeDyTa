@@ -1,7 +1,7 @@
 package wedyta
 
 func (c *Impl) breadcrumbBuilder(config *modelConfig) string {
-	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">` + "\n"
+	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '` + c.Config.BreadcrumbsDivider + `';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="` + c.Config.BreadcrumbsRootUrl + `">` + c.Config.BreadcrumbsRootName + `</a></li>` + "\n"
 
