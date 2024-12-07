@@ -1,0 +1,1 @@
+All wedyta examples located at standalone repository [wedyta-examples](https://github.com/xoid-dev/wedyta-examples/).
