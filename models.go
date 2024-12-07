@@ -24,6 +24,12 @@ type Config struct {
 	// HeadersTag default 'h2'
 	HeadersTag string
 
+	// BreadcrumbsRootName default 'Home'
+	BreadcrumbsRootName string
+
+	// BreadcrumbsRootUrl default '/'
+	BreadcrumbsRootUrl string
+
 	BeforeCreate func(context *gin.Context, db *gorm.DB, table string, id int64)
 	BeforeUpdate func(context *gin.Context, db *gorm.DB, table string, id int64, field string)
 	BeforeDelete func(context *gin.Context, db *gorm.DB, table string, id int64)

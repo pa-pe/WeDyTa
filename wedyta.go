@@ -35,6 +35,14 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 		config.HeadersTag = "h2"
 	}
 
+	if config.BreadcrumbsRootName == "" {
+		config.BreadcrumbsRootName = "Home"
+	}
+
+	if config.BreadcrumbsRootUrl == "" {
+		config.BreadcrumbsRootUrl = "/"
+	}
+
 	impl := &Impl{
 		DB:     db,
 		Config: config,
