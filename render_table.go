@@ -165,6 +165,7 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 						if err != nil {
 							//return "", err
 							relatedDataCache[cacheKey] = relatedValue
+							log.Printf("Wedyta config problem model=%s relatedData=%s error: %v", modelName, relatedDataField, err)
 						} else {
 							value = relatedValue
 							relatedDataCache[cacheKey] = relatedValue
