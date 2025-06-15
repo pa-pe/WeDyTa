@@ -93,7 +93,7 @@ func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelNam
                 </button>
             </` + c.Config.HeadersTag + `>
             <div id="addFormCollapse" class="accordion-collapse collapse" aria-labelledby="addFormHeading" data-bs-parent="#addFormAccordion">
-                <div class="accordion-body" style="background: #e5eeff;">
+                <div class="accordion-body" style="background: rgba(128,128,128,0.1);">
 `)
 
 	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
