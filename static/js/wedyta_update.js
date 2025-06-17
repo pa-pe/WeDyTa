@@ -7,7 +7,7 @@ function send_update_data(data) {
     let query_result = -1;
 
     // fetch('/update_model', {
-    fetch('/wedyta/update/', {
+    fetch('/wedyta/update', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
