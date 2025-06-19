@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -66,8 +67,27 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
+	pageNumStr := context.Query("page")
+	pageNum, err := strconv.Atoi(pageNumStr)
+	if err != nil || pageNum < 1 {
+		pageNum = 1
+	}
+
+	offset := (pageNum - 1) * c.Config.PaginationRecordsPerPage
+
+	totalRecords, err := c.getTotalRecords(db, config)
+	if err != nil {
+		return "", err
+	}
+
 	var records []map[string]interface{}
-	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Order(config.OrderBy).Find(&records).Error; err != nil {
+	if err := db.Debug().
+		Table(config.DbTable).
+		Where(config.SqlWhere).
+		Order(config.OrderBy).
+		Limit(c.Config.PaginationRecordsPerPage).
+		Offset(offset).
+		Find(&records).Error; err != nil {
 		return "", err
 	}
 
@@ -201,5 +221,44 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 	}
 	htmlTable.WriteString("</tbody>\n</table>")
 
+	curPageUrl := modelName
+	htmlTable.WriteString(c.buildPagination(totalRecords, c.Config.PaginationRecordsPerPage, pageNum, curPageUrl))
+
 	return htmlTable.String(), nil
+}
+
+func (c *Impl) getTotalRecords(db *gorm.DB, config *modelConfig) (int64, error) {
+	var totalRecords int64
+	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
+		return 0, err
+	}
+
+	return totalRecords, nil
+}
+
+func (c *Impl) buildPagination(totalRecords int64, pageSize int, pageNum int, url string) string {
+	pageCount := int((totalRecords + int64(pageSize) - 1) / int64(pageSize))
+	if pageCount < 2 {
+		return ""
+	}
+
+	pagination := "<nav aria-label=\"Page navigation\">\n<ul class=\"pagination justify-content-center\">\n"
+	for i := 1; i <= pageCount; i++ {
+		url_ := url
+		if i > 1 {
+			url_ += fmt.Sprintf("?page=%d", i)
+		}
+
+		active := ""
+		if i == pageNum {
+			active = " active"
+		}
+
+		pagination += "<li class=\"page-item" + active + "\">"
+		pagination += fmt.Sprintf("<a class=\"page-link\" href=\"%s\">%d</a> ", url_, i)
+		pagination += "</li>"
+	}
+	pagination += "</ul>\n</nav>\n"
+
+	return pagination
 }

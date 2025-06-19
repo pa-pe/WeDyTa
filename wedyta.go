@@ -35,6 +35,10 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 		config.HeadersTag = "h2"
 	}
 
+	if config.PaginationRecordsPerPage == 0 {
+		config.PaginationRecordsPerPage = 100
+	}
+
 	if config.BreadcrumbsRootName == "" {
 		config.BreadcrumbsRootName = "Home"
 	}

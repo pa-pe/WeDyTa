@@ -24,6 +24,9 @@ type Config struct {
 	// HeadersTag default 'h2'
 	HeadersTag string
 
+	// PaginationRecordsPerPage default 100
+	PaginationRecordsPerPage int
+
 	// BreadcrumbsRootName default 'Home'
 	BreadcrumbsRootName string
 
