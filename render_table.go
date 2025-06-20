@@ -314,7 +314,13 @@ func extractInt64(value any) int64 {
 	return 0
 }
 
+var primaryKeyCache = make(map[string]string)
+
 func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
+	if pk, ok := primaryKeyCache[tableName]; ok {
+		return pk, nil
+	}
+
 	var columnName string
 	query := `
 		SELECT COLUMN_NAME
@@ -325,5 +331,11 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 		LIMIT 1
 	`
 	err := db.Raw(query, tableName).Scan(&columnName).Error
-	return columnName, err
+	if err != nil {
+		return "", err
+	}
+
+	primaryKeyCache[tableName] = columnName
+
+	return columnName, nil
 }
