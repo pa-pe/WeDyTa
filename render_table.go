@@ -269,6 +269,10 @@ func extractInt64(value any) int64 {
 	switch v := value.(type) {
 	case int64:
 		return v
+	case int8:
+		return int64(v)
+	case uint8:
+		return int64(v)
 	case int32:
 		return int64(v)
 	case uint64:
