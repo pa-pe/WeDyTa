@@ -179,18 +179,31 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 					num := extractInt64(value)
 
 					if num != 0 {
-						var relatedValue string
-						err := db.Debug().Table(strings.Split(relatedDataField, ".")[0]).
-							Select(strings.Split(relatedDataField, ".")[1]).
-							Where("id = ?", value).
-							Row().Scan(&relatedValue)
+						tableParts := strings.Split(relatedDataField, ".")
+						tableName := tableParts[0]
+						fieldName := tableParts[1]
+
+						pkField, err := getPrimaryKeyFieldName(db, tableName)
 						if err != nil {
-							//return "", err
-							relatedDataCache[cacheKey] = relatedValue
-							log.Printf("Wedyta config problem model=%s relatedData=%s error: %v", modelName, relatedDataField, err)
+							log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
 						} else {
-							value = relatedValue
-							relatedDataCache[cacheKey] = relatedValue
+							var relatedValue string
+							err = db.Debug().
+								Table(tableName).
+								Select(fieldName).
+								Where(fmt.Sprintf("%s = ?", pkField), value).
+								Row().
+								Scan(&relatedValue)
+
+							if err != nil {
+								//	return "", err
+								relatedDataCache[cacheKey] = relatedValue
+								//log.Printf("Wedyta config problem model=%s relatedData=%s error: %v", modelName, relatedDataField, err)
+								log.Printf("WeDyTa: failed to load related value from %s: %v", tableName, err)
+							} else {
+								value = relatedValue
+								relatedDataCache[cacheKey] = relatedValue
+							}
 						}
 					}
 				}
@@ -299,4 +312,18 @@ func extractInt64(value any) int64 {
 		log.Printf("WeDyTa TODO: unhandled type %T with value %v", value, value)
 	}
 	return 0
+}
+
+func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
+	var columnName string
+	query := `
+		SELECT COLUMN_NAME
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_SCHEMA = DATABASE()
+			AND TABLE_NAME = ?
+			AND COLUMN_KEY = 'PRI'
+		LIMIT 1
+	`
+	err := db.Raw(query, tableName).Scan(&columnName).Error
+	return columnName, err
 }
