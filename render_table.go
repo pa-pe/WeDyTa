@@ -176,7 +176,9 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 				if cachedValue, found := relatedDataCache[cacheKey]; found {
 					value = cachedValue
 				} else {
-					if num, ok := value.(int64); ok && num != 0 {
+					num := extractInt64(value)
+
+					if num != 0 {
 						var relatedValue string
 						err := db.Debug().Table(strings.Split(relatedDataField, ".")[0]).
 							Select(strings.Split(relatedDataField, ".")[1]).
@@ -261,4 +263,36 @@ func (c *Impl) buildPagination(totalRecords int64, pageSize int, pageNum int, ur
 	pagination += "</ul>\n</nav>\n"
 
 	return pagination
+}
+
+func extractInt64(value any) int64 {
+	switch v := value.(type) {
+	case int64:
+		return v
+	case int32:
+		return int64(v)
+	case uint64:
+		return int64(v)
+	case uint32:
+		return int64(v)
+	case int:
+		return int64(v)
+	case uint:
+		return int64(v)
+	case float64:
+		return int64(v)
+	case float32:
+		return int64(v)
+	case []byte:
+		if num, err := strconv.ParseInt(string(v), 10, 64); err == nil {
+			return num
+		}
+	case string:
+		if num, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return num
+		}
+	default:
+		log.Printf("WeDyTa TODO: unhandled type %T with value %v", value, value)
+	}
+	return 0
 }
