@@ -48,6 +48,7 @@ type Config struct {
 }
 
 type modelConfig struct {
+	ModelName         string
 	PageTitle         string                            `json:"pageTitle"`
 	DbTable           string                            `json:"dbTable"`
 	SqlWhere          string                            `json:"sqlWhere"`
