@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (c *Impl) RenderTable(context *gin.Context) {
@@ -230,6 +231,10 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 				value = fmt.Sprintf("<a href='%s'>%v</a>", link, value)
 			}
 
+			if dateTimeFieldConfig, dateTimeFieldExists := config.DateTimeFields[field]; dateTimeFieldExists {
+				value = extractFormattedTime(value, dateTimeFieldConfig)
+			}
+
 			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", tagAttrs, value))
 		}
 		htmlTable.WriteString("</tr>\n")
@@ -338,4 +343,28 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 	primaryKeyCache[tableName] = columnName
 
 	return columnName, nil
+}
+
+func extractFormattedTime(value any, outputFormat string) string {
+	switch v := value.(type) {
+	case time.Time:
+		return v.Format(outputFormat)
+	case string:
+		for _, layout := range []string{
+			time.RFC3339,
+			"2006-01-02 15:04:05",
+			"2006-01-02",
+			"02.01.2006 15:04:05",
+			"02.01.2006",
+		} {
+			if t, err := time.Parse(layout, v); err == nil {
+				return t.Format(outputFormat)
+			}
+		}
+		return v // fallback
+	case []byte:
+		return extractFormattedTime(string(v), outputFormat)
+	default:
+		return fmt.Sprintf("%v", value)
+	}
 }
