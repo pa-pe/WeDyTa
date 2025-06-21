@@ -62,6 +62,7 @@ type modelConfig struct {
 	AddableFields     []string                          `json:"addableFields"`
 	RequiredFields    []string                          `json:"requiredFields"`
 	EditableFields    map[string]string                 `json:"editableFields"`
+	FieldEditor       map[string]string                 `json:"fieldsEditor"`
 	NoZeroValueFields []string                          `json:"noZeroValueFields"`
 	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links             map[string]LinkConfig             `json:"links"`
