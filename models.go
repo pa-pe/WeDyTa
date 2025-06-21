@@ -56,6 +56,7 @@ type modelConfig struct {
 	Headers           map[string]string                 `json:"headers"`
 	Titles            map[string]string                 `json:"titles"`
 	Classes           map[string]string                 `json:"classes"`
+	DateTimeFields    map[string]string                 `json:"dateTimeFields"`
 	RelatedData       map[string]string                 `json:"relatedData"`
 	AddableFields     []string                          `json:"addableFields"`
 	RequiredFields    []string                          `json:"requiredFields"`
