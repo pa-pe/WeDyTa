@@ -262,24 +262,50 @@ func (c *Impl) buildPagination(totalRecords int64, pageSize int, pageNum int, ur
 		return ""
 	}
 
+	const delta = 5
+
+	start := pageNum - delta
+	if start < 1 {
+		start = 1
+	}
+	end := pageNum + delta
+	if end > pageCount {
+		end = pageCount
+	}
+
 	pagination := "<nav aria-label=\"Page navigation\">\n<ul class=\"pagination justify-content-center\">\n"
-	for i := 1; i <= pageCount; i++ {
+
+	// ← First page
+	if start > 1 {
+		pagination += fmt.Sprintf("<li class=\"page-item\"><a class=\"page-link\" href=\"%s\">1</a></li>\n", url)
+		if start > 2 {
+			pagination += "<li class=\"page-item disabled\"><span class=\"page-link\">...</span></li>\n"
+		}
+	}
+
+	// ← Pages around current
+	for i := start; i <= end; i++ {
 		url_ := url
 		if i > 1 {
 			url_ += fmt.Sprintf("?page=%d", i)
 		}
-
 		active := ""
 		if i == pageNum {
 			active = " active"
 		}
-
-		pagination += "<li class=\"page-item" + active + "\">"
-		pagination += fmt.Sprintf("<a class=\"page-link\" href=\"%s\">%d</a> ", url_, i)
-		pagination += "</li>"
+		pagination += fmt.Sprintf("<li class=\"page-item%s\"><a class=\"page-link\" href=\"%s\">%d</a></li>\n", active, url_, i)
 	}
-	pagination += "</ul>\n</nav>\n"
 
+	// → Last page
+	if end < pageCount {
+		if end < pageCount-1 {
+			pagination += "<li class=\"page-item disabled\"><span class=\"page-link\">...</span></li>\n"
+		}
+		url_ := url + fmt.Sprintf("?page=%d", pageCount)
+		pagination += fmt.Sprintf("<li class=\"page-item\"><a class=\"page-link\" href=\"%s\">%d</a></li>\n", url_, pageCount)
+	}
+
+	pagination += "</ul>\n</nav>\n"
 	return pagination
 }
 
