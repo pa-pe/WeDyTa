@@ -61,13 +61,14 @@ type modelConfig struct {
 	RelatedData       map[string]string                 `json:"relatedData"`
 	AddableFields     []string                          `json:"addableFields"`
 	RequiredFields    []string                          `json:"requiredFields"`
-	EditableFields    map[string]string                 `json:"editableFields"`
+	EditableFields    []string                          `json:"editableFields"`
 	FieldEditor       map[string]string                 `json:"fieldsEditor"`
 	NoZeroValueFields []string                          `json:"noZeroValueFields"`
 	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links             map[string]LinkConfig             `json:"links"`
 	Parent            map[string]string                 `json:"parent"`
 	ParentConfig      *modelConfig
+	FieldConfig       map[string]FieldParams
 }
 
 type CountRelatedDataConfig struct {
@@ -78,4 +79,12 @@ type CountRelatedDataConfig struct {
 
 type LinkConfig struct {
 	Template string `json:"template"`
+}
+
+type FieldParams struct {
+	IsAddable   bool
+	IsEditable  bool
+	IsRequired  bool
+	FieldEditor string
+	Classes     string
 }

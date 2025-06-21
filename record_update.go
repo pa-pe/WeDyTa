@@ -71,8 +71,8 @@ func (c *Impl) Update(context *gin.Context) {
 	updateData := make(map[string]interface{})
 	//	if class, ok := config.EditableFields[field]; ok {
 
-	//	for _, field := range allowed {
-	for field := range config.EditableFields {
+	//for field := range config.EditableFields {
+	for _, field := range config.EditableFields {
 		fieldSnaked := CamelToSnake(field)
 		if value, exists := payload[fieldSnaked]; exists {
 			updateData[fieldSnaked] = value

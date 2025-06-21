@@ -25,6 +25,7 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 
 	config.ModelName = modelName
 	c.loadModelConfigDefaults(&config)
+	c.fillFieldConfig(&config)
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
@@ -65,6 +66,46 @@ func (c *Impl) loadModelConfigDefaults(config *modelConfig) {
 	}
 	if config.DbTable == "" {
 		config.DbTable = CamelToSnake(config.ModelName)
+	}
+}
+
+func (c *Impl) fillFieldConfig(config *modelConfig) {
+	if config.FieldConfig == nil {
+		config.FieldConfig = make(map[string]FieldParams)
+	}
+
+	// AddableFields
+	for _, field := range config.AddableFields {
+		param := config.FieldConfig[field]
+		param.IsAddable = true
+		if param.FieldEditor == "" {
+			param.FieldEditor = "textarea"
+		}
+		config.FieldConfig[field] = param
+	}
+
+	// EditableFields
+	for _, field := range config.EditableFields {
+		param := config.FieldConfig[field]
+		param.IsEditable = true
+		if param.FieldEditor == "" {
+			param.FieldEditor = "textarea"
+		}
+		config.FieldConfig[field] = param
+	}
+
+	// Required
+	for _, field := range config.RequiredFields {
+		param := config.FieldConfig[field]
+		param.IsRequired = true
+		config.FieldConfig[field] = param
+	}
+
+	// Classes
+	for field, class := range config.Classes {
+		param := config.FieldConfig[field]
+		param.Classes = class
+		config.FieldConfig[field] = param
 	}
 }
 

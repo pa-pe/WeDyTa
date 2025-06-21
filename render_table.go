@@ -22,8 +22,8 @@ func (c *Impl) RenderTable(context *gin.Context) {
 
 	config, err := c.loadModelConfig(context, modelName, nil)
 	if err != nil {
-		log.Print("No configuration found for RenderTable: " + modelName)
-		context.String(http.StatusNotFound, "No configuration found for RenderTable: "+modelName)
+		log.Printf("No valid configuration found for RenderTable: %s, err: %v", modelName, err)
+		context.String(http.StatusNotFound, "No valid configuration found for RenderTable: "+modelName+", see log for details.")
 		return
 	}
 
@@ -147,19 +147,20 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 				}
 			}
 
+			fldCfg := config.FieldConfig[field]
+
 			classStr := ""
 			additionalAttr := ""
 			if field == "id" || field == "ID" {
 				classStr += " rec_id"
 			}
 
-			if class, ok := config.Classes[field]; ok {
-				//classAttr = fmt.Sprintf(" class='%s'", class)
-				classStr += " " + class
+			if fldCfg.Classes != "" {
+				classStr += " " + fldCfg.Classes
 			}
 
-			if class, ok := config.EditableFields[field]; ok {
-				classStr += " editable editable-" + class
+			if fldCfg.IsEditable {
+				classStr += " editable editable-" + fldCfg.FieldEditor
 				additionalAttr += ` fieldName="` + CamelToSnake(field) + `"`
 			}
 
