@@ -20,18 +20,14 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		return
 	}
 
-	config, err := c.loadModelConfig(context, modelName, nil)
-	if err != nil {
-		log.Printf("No valid configuration found for RenderTable: %s, err: %v", modelName, err)
-		context.String(http.StatusNotFound, "No valid configuration found for RenderTable: "+modelName+", see log for details.")
+	config := c.loadModelConfig(context, modelName, nil)
+	if config == nil {
 		return
 	}
 
 	htmlTable, err := c.RenderModelTable(context, c.DB, modelName, config)
 	if err != nil {
-		fmt.Println("Ошибка:", err)
-		errStr := fmt.Sprint("Ошибка:", err)
-		context.String(http.StatusNotFound, "Error RenderTable "+modelName+": "+errStr)
+		c.somethingWentWrong(context, fmt.Sprintf("RenderModelTable error: %v", err))
 		return
 	}
 
@@ -48,9 +44,10 @@ func (c *Impl) RenderTable(context *gin.Context) {
 
 		context.HTML(http.StatusOK, c.Config.Template, ginH)
 	} else {
-		content, err := embeddedFiles.ReadFile("templates/default.tmpl")
+		defaultTemplate := "templates/default.tmpl"
+		content, err := embeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			context.String(http.StatusInternalServerError, "Failed to load vedyta default template")
+			c.somethingWentWrong(context, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 

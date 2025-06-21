@@ -3,7 +3,6 @@ package wedyta
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -26,10 +25,8 @@ func (c *Impl) HandleTableCreateRecord(context *gin.Context) {
 		return
 	}
 
-	config, err := c.loadModelConfig(context, modelName, payload)
-	if err != nil {
-		log.Printf("No configuration found for model: %s", modelName)
-		context.JSON(http.StatusBadRequest, gin.H{"error": "No configuration found for model '" + modelName + "'"})
+	config := c.loadModelConfig(context, modelName, payload)
+	if config == nil {
 		return
 	}
 

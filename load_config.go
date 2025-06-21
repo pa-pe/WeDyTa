@@ -10,17 +10,20 @@ import (
 	"strings"
 )
 
-func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload map[string]interface{}) (*modelConfig, error) {
+func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload map[string]interface{}) *modelConfig {
 	configPath := c.Config.ConfigDir + "/" + modelName + ".json"
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		c.somethingWentWrong(context, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
+		return nil
 	}
 
 	var config modelConfig
 	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
+		//return nil, fmt.Errorf("failed to parse config JSON: %w", err)
+		c.somethingWentWrong(context, fmt.Sprintf("Failed to parse config JSON of modelName: %s, err: %v", modelName, err))
+		return nil
 	}
 
 	config.ModelName = modelName
@@ -29,9 +32,10 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
-		config.ParentConfig, err = c.loadModelConfig(context, parentModelName, payload)
-		if err != nil {
-			log.Print("Wedyta: Can`t load ParentConfig: " + parentModelName)
+		config.ParentConfig = c.loadModelConfig(context, parentModelName, payload)
+		if config.ParentConfig == nil {
+			c.somethingWentWrong(context, "Can`t load ParentConfig: "+parentModelName)
+			return nil
 		}
 
 		if queryVariableName, exist := config.Parent["queryVariableName"]; exist {
@@ -52,12 +56,13 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 	}
 
 	if c.Config.VariableResolver == nil && strings.Contains(config.SqlWhere, "{{") {
-		return nil, fmt.Errorf("trying to use variables without Config.VariableResolver modelName=%s", modelName)
+		c.somethingWentWrong(context, fmt.Sprintf("Trying to use variables without Config.VariableResolver modelName=%s", modelName))
+		return nil
 	}
 
 	config.SqlWhere = c.resolveVariables(context, modelName, config.SqlWhere)
 
-	return &config, nil
+	return &config
 }
 
 func (c *Impl) loadModelConfigDefaults(config *modelConfig) {
