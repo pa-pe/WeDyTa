@@ -23,12 +23,8 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
 	}
 
-	if config.PageTitle == "" {
-		config.PageTitle = modelName
-	}
-	if config.DbTable == "" {
-		config.DbTable = CamelToSnake(modelName)
-	}
+	config.ModelName = modelName
+	c.loadModelConfigDefaults(&config)
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
@@ -61,6 +57,15 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 	config.SqlWhere = c.resolveVariables(context, modelName, config.SqlWhere)
 
 	return &config, nil
+}
+
+func (c *Impl) loadModelConfigDefaults(config *modelConfig) {
+	if config.PageTitle == "" {
+		config.PageTitle = config.ModelName
+	}
+	if config.DbTable == "" {
+		config.DbTable = CamelToSnake(config.ModelName)
+	}
 }
 
 func (c *Impl) resolveVariables(context *gin.Context, modelName string, str string) string {
