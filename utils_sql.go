@@ -15,16 +15,59 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 		return pk, nil
 	}
 
+	dialector := db.Dialector.Name()
 	var columnName string
-	query := `
-		SELECT COLUMN_NAME
-		FROM INFORMATION_SCHEMA.COLUMNS
-		WHERE TABLE_SCHEMA = DATABASE()
-			AND TABLE_NAME = ?
-			AND COLUMN_KEY = 'PRI'
-		LIMIT 1
-	`
-	err := db.Raw(query, tableName).Scan(&columnName).Error
+	var err error
+
+	switch dialector {
+	case "mysql":
+		query := `
+			SELECT COLUMN_NAME
+			FROM INFORMATION_SCHEMA.COLUMNS
+			WHERE TABLE_SCHEMA = DATABASE()
+				AND TABLE_NAME = ?
+				AND COLUMN_KEY = 'PRI'
+			LIMIT 1
+		`
+		err = db.Raw(query, tableName).Scan(&columnName).Error
+
+	case "sqlite", "sqlite3":
+		type tableInfo struct {
+			Cid          int
+			Name         string
+			Type         string
+			NotNull      int
+			DefaultValue any `gorm:"column:dflt_value"`
+			PK           int
+		}
+		var columns []tableInfo
+		err = db.Raw(fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)).Scan(&columns).Error
+		if err == nil {
+			for _, col := range columns {
+				if col.PK == 1 {
+					columnName = col.Name
+					break
+				}
+			}
+			if columnName == "" {
+				err = fmt.Errorf("no primary key found in table %s", tableName)
+			}
+		}
+	case "postgres":
+		query := `
+			SELECT a.attname
+			FROM pg_index i
+			JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+			JOIN pg_class c ON c.oid = i.indrelid
+			JOIN pg_namespace n ON n.oid = c.relnamespace
+			WHERE i.indisprimary AND c.relname = $1
+			LIMIT 1
+		`
+		err = db.Raw(query, tableName).Scan(&columnName).Error
+	default:
+		err = fmt.Errorf("unsupported database driver: %s", dialector)
+	}
+
 	if err != nil {
 		return "", err
 	}
