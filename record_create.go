@@ -7,25 +7,25 @@ import (
 	"strings"
 )
 
-func (c *Impl) HandleTableCreateRecord(context *gin.Context) {
+func (c *Impl) HandleTableCreateRecord(ctx *gin.Context) {
 	var payload map[string]interface{}
-	if err := context.ShouldBindJSON(&payload); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
 
 	modelName, ok := payload["modelName"].(string)
 	if !ok {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
 		return
 	}
 
-	if c.Config.AccessCheckFunc(context, modelName, "", "create") != true {
-		context.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
+	if c.Config.AccessCheckFunc(ctx, modelName, "", "create") != true {
+		ctx.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
 		return
 	}
 
-	config := c.loadModelConfig(context, modelName, payload)
+	config := c.loadModelConfig(ctx, modelName, payload)
 	if config == nil {
 		return
 	}
@@ -46,7 +46,7 @@ func (c *Impl) HandleTableCreateRecord(context *gin.Context) {
 	// check RequiredFields
 	for _, requiredField := range config.RequiredFields {
 		if value, exists := payload[requiredField]; !exists || value == "" {
-			context.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' is required", requiredField)})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' is required", requiredField)})
 			return
 		}
 	}
@@ -55,26 +55,26 @@ func (c *Impl) HandleTableCreateRecord(context *gin.Context) {
 	for _, noZeroField := range config.NoZeroValueFields {
 		if value, exists := payload[noZeroField]; exists {
 			if number, ok := value.(float64); ok && number == 0 {
-				context.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' cannot be zero", noZeroField)})
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' cannot be zero", noZeroField)})
 				return
 			}
 		}
 	}
 
 	if len(insertData) == 0 {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "No data to insert"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No data to insert"})
 		return
 	}
 
 	if err := c.DB.Debug().Table(config.DbTable).Create(insertData).Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"success": true})
+	ctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelName string) string {
+func (c *Impl) RenderAddForm(ctx *gin.Context, config *modelConfig, modelName string) string {
 	if config == nil || len(config.AddableFields) == 0 {
 		return ""
 	}
@@ -104,7 +104,7 @@ func (c *Impl) RenderAddForm(context *gin.Context, config *modelConfig, modelNam
 
 	countFields := 0
 	for _, field := range config.AddableFields {
-		if c.Config.AccessCheckFunc(context, modelName, field, "create") != true {
+		if c.Config.AccessCheckFunc(ctx, modelName, field, "create") != true {
 			continue
 		}
 

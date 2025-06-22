@@ -10,19 +10,19 @@ import (
 	"strings"
 )
 
-func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload map[string]interface{}) *modelConfig {
+func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *modelConfig {
 	configPath := c.Config.ConfigDir + "/" + modelName + ".json"
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		c.somethingWentWrong(context, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
+		c.somethingWentWrong(ctx, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
 	var config modelConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		//return nil, fmt.Errorf("failed to parse config JSON: %w", err)
-		c.somethingWentWrong(context, fmt.Sprintf("Failed to parse config JSON of modelName: %s, err: %v", modelName, err))
+		c.somethingWentWrong(ctx, fmt.Sprintf("Failed to parse config JSON of modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
@@ -32,9 +32,9 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
-		config.ParentConfig = c.loadModelConfig(context, parentModelName, payload)
+		config.ParentConfig = c.loadModelConfig(ctx, parentModelName, payload)
 		if config.ParentConfig == nil {
-			c.somethingWentWrong(context, "Can`t load ParentConfig: "+parentModelName)
+			c.somethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
 			return nil
 		}
 
@@ -45,7 +45,7 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 					config.Parent["queryVariableValue"] = value
 				}
 			} else {
-				if queryVariableValue, exist := context.GetQuery(queryVariableName); exist {
+				if queryVariableValue, exist := ctx.GetQuery(queryVariableName); exist {
 					//fmt.Println("queryVariableValue=" + queryVariableValue)
 					config.Parent["queryVariableValue"] = queryVariableValue
 					//			} else {
@@ -56,11 +56,11 @@ func (c *Impl) loadModelConfig(context *gin.Context, modelName string, payload m
 	}
 
 	if c.Config.VariableResolver == nil && strings.Contains(config.SqlWhere, "{{") {
-		c.somethingWentWrong(context, fmt.Sprintf("Trying to use variables without Config.VariableResolver modelName=%s", modelName))
+		c.somethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without Config.VariableResolver modelName=%s", modelName))
 		return nil
 	}
 
-	config.SqlWhere = c.resolveVariables(context, modelName, config.SqlWhere)
+	config.SqlWhere = c.resolveVariables(ctx, modelName, config.SqlWhere)
 
 	return &config
 }
@@ -114,7 +114,7 @@ func (c *Impl) fillFieldConfig(config *modelConfig) {
 	}
 }
 
-func (c *Impl) resolveVariables(context *gin.Context, modelName string, str string) string {
+func (c *Impl) resolveVariables(ctx *gin.Context, modelName string, str string) string {
 	if !strings.Contains(str, "{{") {
 		return str
 	}
@@ -129,14 +129,14 @@ func (c *Impl) resolveVariables(context *gin.Context, modelName string, str stri
 		}
 	}
 
-	//queryParams := context.Request.URL.Query()
+	//queryParams := ctx.Request.URL.Query()
 	for _, variable := range variables {
 		value := ""
 		//if queryValue, exists := queryParams[variable]; exists {
 		//	value = queryValue[0]
 		//} else {
 		if c.Config.VariableResolver != nil {
-			value = c.Config.VariableResolver(context, modelName, variable)
+			value = c.Config.VariableResolver(ctx, modelName, variable)
 		} else {
 
 		}

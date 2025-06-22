@@ -8,39 +8,39 @@ import (
 )
 
 // Update updates the fields of a specified model based on the allowedFields
-func (c *Impl) Update(context *gin.Context) {
+func (c *Impl) Update(ctx *gin.Context) {
 	var payload map[string]interface{}
-	if err := context.ShouldBindJSON(&payload); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
 
 	modelName, ok := payload["modelName"].(string)
 	if !ok {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
 		return
 	}
 
-	if c.Config.AccessCheckFunc(context, modelName, "", "update") != true {
-		//context.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
-		context.JSON(http.StatusForbidden, gin.H{"error": "Access denied", "modelName": "$modelName"})
+	if c.Config.AccessCheckFunc(ctx, modelName, "", "update") != true {
+		//ctx.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "Access denied", "modelName": "$modelName"})
 		return
 	}
 
-	config := c.loadModelConfig(context, modelName, payload)
+	config := c.loadModelConfig(ctx, modelName, payload)
 	if config == nil {
 		return
 	}
 
 	//var payload map[string]interface{}
-	//if err := context.ShouldBindJSON(&payload); err != nil {
-	//	context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+	//if err := ctx.ShouldBindJSON(&payload); err != nil {
+	//	ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 	//	return
 	//}
 	//
 	//modelName, ok := payload["model"].(string)
 	//if !ok {
-	//	context.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
+	//	ctx.JSON(http.StatusBadRequest, gin.H{"error": "Model name is required"})
 	//	return
 	//}
 
@@ -50,13 +50,13 @@ func (c *Impl) Update(context *gin.Context) {
 	if !ok {
 		idStr, ok := payload["id"].(string)
 		if !ok {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
 			return
 		}
 
 		idFromStr, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "ID recognize"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID recognize"})
 			return
 		}
 		id = float64(idFromStr)
@@ -81,24 +81,24 @@ func (c *Impl) Update(context *gin.Context) {
 	}
 
 	if len(updateData) == 0 {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
 		return
 	}
 
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
 	if err := c.DB.Debug().Table(config.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
 		return
 	}
 
 	if len(updateData) == 0 {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
 		return
 	}
 
 	if err := c.DB.Debug().Table(config.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
 		return
 	}
 
@@ -106,15 +106,15 @@ func (c *Impl) Update(context *gin.Context) {
 		for field, newValue := range updateData {
 			originalValue, exists := originalData[field]
 			if exists && originalValue != newValue {
-				go c.Config.AfterUpdate(context, c.DB, config.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
+				go c.Config.AfterUpdate(ctx, c.DB, config.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
 			}
 		}
 	}
 
 	// client side js tests:
 	//time.Sleep(1000 * time.Millisecond)
-	//context.JSON(http.StatusBadRequest, gin.H{"error": "test fail"})
+	//ctx.JSON(http.StatusBadRequest, gin.H{"error": "test fail"})
 	//return
 
-	context.JSON(http.StatusOK, gin.H{"success": true, "message": "Model updated successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"success": true, "message": "Model updated successfully"})
 }

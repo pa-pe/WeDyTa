@@ -11,22 +11,22 @@ import (
 	"strings"
 )
 
-func (c *Impl) RenderTable(context *gin.Context) {
-	modelName := context.Param("modelName")
+func (c *Impl) RenderTable(ctx *gin.Context) {
+	modelName := ctx.Param("modelName")
 
-	if c.Config.AccessCheckFunc(context, modelName, "", "read") != true {
-		context.String(http.StatusForbidden, "No access RenderTable: "+modelName)
+	if c.Config.AccessCheckFunc(ctx, modelName, "", "read") != true {
+		ctx.String(http.StatusForbidden, "No access RenderTable: "+modelName)
 		return
 	}
 
-	config := c.loadModelConfig(context, modelName, nil)
+	config := c.loadModelConfig(ctx, modelName, nil)
 	if config == nil {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTable(context, c.DB, modelName, config)
+	htmlTable, err := c.RenderModelTable(ctx, c.DB, modelName, config)
 	if err != nil {
-		c.somethingWentWrong(context, fmt.Sprintf("RenderModelTable error: %v", err))
+		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTable error: %v", err))
 		return
 	}
 
@@ -38,15 +38,15 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		//ginH["Title"] = config.PageTitle
 
 		if c.Config.PrepareTemplateVariables != nil {
-			c.Config.PrepareTemplateVariables(context, modelName, ginH)
+			c.Config.PrepareTemplateVariables(ctx, modelName, ginH)
 		}
 
-		context.HTML(http.StatusOK, c.Config.Template, ginH)
+		ctx.HTML(http.StatusOK, c.Config.Template, ginH)
 	} else {
 		defaultTemplate := "templates/default.tmpl"
 		content, err := embeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			c.somethingWentWrong(context, "Failed to load default template: "+defaultTemplate)
+			c.somethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 
@@ -55,16 +55,16 @@ func (c *Impl) RenderTable(context *gin.Context) {
 		templateContent = strings.Replace(templateContent, "{{ .Title }}", config.PageTitle, -1)
 		templateContent = strings.Replace(templateContent, "{{ .Content }}", htmlTable, -1)
 
-		context.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
+		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
 	}
 }
 
-func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
+func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
 	if config == nil || modelName == "" {
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
-	pageNumStr := context.Query("page")
+	pageNumStr := ctx.Query("page")
 	pageNum, err := strconv.Atoi(pageNumStr)
 	if err != nil || pageNum < 1 {
 		pageNum = 1
@@ -100,7 +100,7 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 
 	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(c.breadcrumbBuilder(config, ""))
-	htmlTable.WriteString(c.RenderAddForm(context, config, modelName))
+	htmlTable.WriteString(c.RenderAddForm(ctx, config, modelName))
 
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "'>\n<thead>\n<tr>\n")
 
