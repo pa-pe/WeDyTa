@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (c *Impl) somethingWentWrong(context *gin.Context, logString string) {
-	log.Println("Wedyta: " + logString)
-	context.String(http.StatusInternalServerError, "Something went wrong, see log for details.")
+func (c *Impl) somethingWentWrong(ctx *gin.Context, logString string) {
+	log.Println("Wedyta: " + logString + " url=" + ctx.Request.URL.String())
+	ctx.String(http.StatusInternalServerError, "Something went wrong, see log for details.")
 }
