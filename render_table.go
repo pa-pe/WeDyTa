@@ -149,15 +149,6 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 	return htmlTable.String(), nil
 }
 
-func (c *Impl) getTotalRecords(db *gorm.DB, config *modelConfig) (int64, error) {
-	var totalRecords int64
-	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
-		return 0, err
-	}
-
-	return totalRecords, nil
-}
-
 func (c *Impl) buildPagination(totalRecords int64, pageSize int, pageNum int, url string) string {
 	pageCount := int((totalRecords + int64(pageSize) - 1) / int64(pageSize))
 	if pageCount < 2 {

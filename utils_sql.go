@@ -77,6 +77,15 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 	return columnName, nil
 }
 
+func (c *Impl) getTotalRecords(db *gorm.DB, config *modelConfig) (int64, error) {
+	var totalRecords int64
+	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
+		return 0, err
+	}
+
+	return totalRecords, nil
+}
+
 func extractInt64(value any) int64 {
 	switch v := value.(type) {
 	case int64:
