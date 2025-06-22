@@ -11,27 +11,29 @@ import (
 	"strings"
 )
 
-func (c *Impl) RenderTableRecord(context *gin.Context) {
-	modelName := context.Param("modelName")
-	recIDstr := context.Param("recID")
+func (c *Impl) RenderTableRecord(ctx *gin.Context) {
+	modelName := ctx.Param("modelName")
+	recIDstr := ctx.Param("recID")
 	recID, err := strconv.ParseInt(recIDstr, 10, 64)
 	if err != nil {
-		c.somethingWentWrong(context, "Can't ParseInt recID="+recIDstr)
+		c.somethingWentWrong(ctx, "Can't ParseInt recID="+recIDstr)
 	}
 
-	if c.Config.AccessCheckFunc(context, modelName, "", "read") != true {
-		context.String(http.StatusForbidden, "No access RenderTable: "+modelName)
+	action := "read"
+
+	if c.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
+		ctx.String(http.StatusForbidden, "No access RenderTable: "+modelName)
 		return
 	}
 
-	config := c.loadModelConfig(context, modelName, nil)
+	config := c.loadModelConfig(ctx, modelName, nil)
 	if config == nil {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTableRecord(context, c.DB, modelName, config, recID)
+	htmlTable, err := c.RenderModelTableRecord(ctx, c.DB, modelName, config, recID)
 	if err != nil {
-		c.somethingWentWrong(context, fmt.Sprintf("RenderModelTableRecord error: %v", err))
+		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
 	}
 
@@ -43,15 +45,15 @@ func (c *Impl) RenderTableRecord(context *gin.Context) {
 		//ginH["Title"] = config.PageTitle
 
 		if c.Config.PrepareTemplateVariables != nil {
-			c.Config.PrepareTemplateVariables(context, modelName, ginH)
+			c.Config.PrepareTemplateVariables(ctx, modelName, ginH)
 		}
 
-		context.HTML(http.StatusOK, c.Config.Template, ginH)
+		ctx.HTML(http.StatusOK, c.Config.Template, ginH)
 	} else {
 		defaultTemplate := "templates/default.tmpl"
 		content, err := embeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			c.somethingWentWrong(context, "Failed to load default template: "+defaultTemplate)
+			c.somethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 
@@ -60,7 +62,7 @@ func (c *Impl) RenderTableRecord(context *gin.Context) {
 		templateContent = strings.Replace(templateContent, "{{ .Title }}", config.PageTitle, -1)
 		templateContent = strings.Replace(templateContent, "{{ .Content }}", htmlTable, -1)
 
-		context.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
+		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
 	}
 }
 
