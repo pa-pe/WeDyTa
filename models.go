@@ -88,3 +88,7 @@ type FieldParams struct {
 	FieldEditor string
 	Classes     string
 }
+
+type RenderTableCache struct {
+	RelatedData map[string]string
+}
