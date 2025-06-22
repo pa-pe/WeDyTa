@@ -68,8 +68,19 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 	wedytaGroup.StaticFS("/static", http.FS(staticFiles))
 	wedytaGroup.GET("/:modelName", impl.RenderTable)
 	wedytaGroup.GET("/:modelName/:recID", impl.RenderTableRecord)
+	wedytaGroup.GET("/:modelName/:recID/:action", impl.RouteModelRecordAction)
 	wedytaGroup.POST("/add", impl.HandleTableCreateRecord)
 	wedytaGroup.POST("/update", impl.Update)
 
 	return impl
+}
+
+func (c *Impl) RouteModelRecordAction(ctx *gin.Context) {
+	action := ctx.Param("action")
+	switch action {
+	case "update":
+		c.RenderTableRecord(ctx)
+	default:
+		c.somethingWentWrong(ctx, "RouteModelRecordAction: unknown action="+action)
+	}
 }
