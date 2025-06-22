@@ -99,7 +99,7 @@ func (c *Impl) RenderModelTable(context *gin.Context, db *gorm.DB, modelName str
 	}
 
 	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(c.breadcrumbBuilder(config))
+	htmlTable.WriteString(c.breadcrumbBuilder(config, ""))
 	htmlTable.WriteString(c.RenderAddForm(context, config, modelName))
 
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "'>\n<thead>\n<tr>\n")

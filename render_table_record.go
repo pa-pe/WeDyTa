@@ -98,7 +98,7 @@ func (c *Impl) RenderModelTableRecord(context *gin.Context, db *gorm.DB, modelNa
 	htmlTable.WriteString("<div class=\"col\">\n")
 
 	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(c.breadcrumbBuilder(config))
+	htmlTable.WriteString(c.breadcrumbBuilder(config, fmt.Sprintf("%d", recID)))
 
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "' style='width: auto;'>\n<tbody>\n<tr>\n")
 
