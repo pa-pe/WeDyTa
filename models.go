@@ -3,6 +3,7 @@ package wedyta
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Config struct {
@@ -69,6 +70,11 @@ type modelConfig struct {
 	Parent            map[string]string                 `json:"parent"`
 	ParentConfig      *modelConfig
 	FieldConfig       map[string]FieldParams
+}
+
+type cachedModelConfig struct {
+	Config  *modelConfig
+	ModTime time.Time
 }
 
 type CountRelatedDataConfig struct {

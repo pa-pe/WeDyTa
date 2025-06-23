@@ -11,7 +11,22 @@ import (
 )
 
 func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *modelConfig {
+	if c.modelCache == nil {
+		c.modelCache = make(map[string]cachedModelConfig)
+	}
+
 	configPath := c.Config.ConfigDir + "/" + modelName + ".json"
+
+	stat, err := os.Stat(configPath)
+	if err != nil {
+		c.somethingWentWrong(ctx, fmt.Sprintf("Cannot stat config file for model %s: %v", modelName, err))
+		return nil
+	}
+
+	cached, found := c.modelCache[modelName]
+	if found && cached.ModTime.Equal(stat.ModTime()) {
+		return cached.Config
+	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
@@ -61,6 +76,11 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 	}
 
 	config.SqlWhere = c.resolveVariables(ctx, modelName, config.SqlWhere)
+
+	c.modelCache[modelName] = cachedModelConfig{
+		Config:  &config,
+		ModTime: stat.ModTime(),
+	}
 
 	return &config
 }

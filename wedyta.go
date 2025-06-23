@@ -13,8 +13,9 @@ import (
 var embeddedFiles embed.FS
 
 type Impl struct {
-	DB     *gorm.DB
-	Config *Config
+	DB         *gorm.DB
+	Config     *Config
+	modelCache map[string]cachedModelConfig
 }
 
 func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
