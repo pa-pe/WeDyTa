@@ -18,6 +18,8 @@ type Impl struct {
 	modelCache map[string]cachedModelConfig
 }
 
+var _ = New
+
 func New(r *gin.Engine, db *gorm.DB, wedytaConfig *Config) *Impl {
 	if wedytaConfig == nil {
 		// default if no wedytaConfig
