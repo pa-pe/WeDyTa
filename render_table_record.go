@@ -78,8 +78,8 @@ func (c *Impl) RenderModelTableRecord(ctx *gin.Context, modelName string, config
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
-	pkField, err := c.getPrimaryKeyFieldName(config.DbTable)
-	if err != nil {
+	if config.DbTablePrimaryKey == "" {
+		err := fmt.Errorf("empty config.DbTablePrimaryKey for model: %s", modelName)
 		return "", err
 	}
 
@@ -87,7 +87,7 @@ func (c *Impl) RenderModelTableRecord(ctx *gin.Context, modelName string, config
 	if err := c.DB.
 		Model(&record).
 		Table(config.DbTable).
-		Where(fmt.Sprintf("%s = %d", pkField, recID)).
+		Where(fmt.Sprintf("%s = %d", config.DbTablePrimaryKey, recID)).
 		Where(config.SqlWhere).
 		Take(&record).Error; err != nil {
 		return "", err
@@ -118,7 +118,7 @@ td { width: auto !important; }
 
 	if isUpdateMode {
 		var pkValue string
-		value, exists := record[pkField]
+		value, exists := record[config.DbTablePrimaryKey]
 		if exists {
 			pkValue = fmt.Sprintf("%v", value)
 		} else {

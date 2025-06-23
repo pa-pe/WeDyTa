@@ -93,6 +93,11 @@ func (c *Impl) loadModelConfigDefaults(config *modelConfig) {
 		config.DbTable = CamelToSnake(config.ModelName)
 	}
 
+	var err error
+	config.DbTablePrimaryKey, err = c.getPrimaryKeyFieldName(config.DbTable)
+	if err != nil {
+		log.Printf("WeDyTa: can't determine primary key for table %s: %v", config.DbTable, err)
+	}
 	//if len(config.AddableFields) > 0 || len(config.EditableFields) > 0 {
 	//	// хотя бы один массив НЕ пуст
 	//}
