@@ -19,12 +19,12 @@ func (c *Impl) RenderTable(ctx *gin.Context) {
 		return
 	}
 
-	config := c.loadModelConfig(ctx, modelName, nil)
-	if config == nil {
+	mConfig := c.loadModelConfig(ctx, modelName, nil)
+	if mConfig == nil {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTable(ctx, c.DB, modelName, config)
+	htmlTable, err := c.RenderModelTable(ctx, c.DB, mConfig)
 	if err != nil {
 		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTable error: %v", err))
 		return
@@ -32,10 +32,10 @@ func (c *Impl) RenderTable(ctx *gin.Context) {
 
 	if c.Config.Template != "" {
 		ginH := gin.H{
-			"Title":   config.PageTitle,
+			"Title":   mConfig.PageTitle,
 			"Content": template.HTML(htmlTable),
 		}
-		//ginH["Title"] = config.PageTitle
+		//ginH["Title"] = mConfig.PageTitle
 
 		if c.Config.PrepareTemplateVariables != nil {
 			c.Config.PrepareTemplateVariables(ctx, modelName, ginH)
@@ -52,16 +52,16 @@ func (c *Impl) RenderTable(ctx *gin.Context) {
 
 		templateContent := string(content)
 
-		templateContent = strings.Replace(templateContent, "{{ .Title }}", config.PageTitle, -1)
+		templateContent = strings.Replace(templateContent, "{{ .Title }}", mConfig.PageTitle, -1)
 		templateContent = strings.Replace(templateContent, "{{ .Content }}", htmlTable, -1)
 
 		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
 	}
 }
 
-func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string, config *modelConfig) (string, error) {
-	if config == nil || modelName == "" {
-		log.Fatalf("configuration not found for model: %s", modelName)
+func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *modelConfig) (string, error) {
+	if mConfig == nil {
+		log.Fatalf("Wedyta: RenderModelTable(): mConfig == nil")
 	}
 
 	pageNumStr := ctx.Query("page")
@@ -72,16 +72,16 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string,
 
 	offset := (pageNum - 1) * c.Config.PaginationRecordsPerPage
 
-	totalRecords, err := c.getTotalRecords(config)
+	totalRecords, err := c.getTotalRecords(mConfig)
 	if err != nil {
 		return "", err
 	}
 
 	var records []map[string]interface{}
 	if err := db.
-		Table(config.DbTable).
-		Where(config.SqlWhere).
-		Order(config.OrderBy).
+		Table(mConfig.DbTable).
+		Where(mConfig.SqlWhere).
+		Order(mConfig.OrderBy).
 		Limit(c.Config.PaginationRecordsPerPage).
 		Offset(offset).
 		Find(&records).Error; err != nil {
@@ -91,30 +91,30 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string,
 	var htmlTable strings.Builder
 	htmlTable.WriteString(`<link rel="stylesheet" href="/wedyta/static/css/wedyta.css">` + "\n")
 
-	if len(config.EditableFields) > 0 {
+	if len(mConfig.EditableFields) > 0 {
 		htmlTable.WriteString(`
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="/wedyta/static/js/wedyta_update.js"></script>
 `)
 	}
 
-	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(c.breadcrumbBuilder(config, ""))
-	htmlTable.WriteString(c.RenderAddForm(ctx, config, modelName))
+	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
+	htmlTable.WriteString(c.breadcrumbBuilder(mConfig, ""))
+	htmlTable.WriteString(c.RenderAddForm(ctx, mConfig))
 
-	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "'>\n<thead>\n<tr>\n")
+	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
-	for _, field := range config.Fields {
-		header := config.Headers[field]
+	for _, field := range mConfig.Fields {
+		header := mConfig.Headers[field]
 		if header == "" {
-			header = config.Headers[InvertCaseStyle(field)]
+			header = mConfig.Headers[InvertCaseStyle(field)]
 		}
 		if header == "" {
 			header = field
 		}
 
 		titleStr := ""
-		if title, ok := config.Titles[field]; ok {
+		if title, ok := mConfig.Titles[field]; ok {
 			titleStr = fmt.Sprintf(" title='%s'", title)
 		}
 
@@ -135,15 +135,15 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string,
 		}
 
 		htmlTable.WriteString("<tr" + trClass + ">\n")
-		for _, field := range config.Fields {
-			value, tagAttrs := c.renderRecordValue(config, field, record, &cache)
+		for _, field := range mConfig.Fields {
+			value, tagAttrs := c.renderRecordValue(mConfig, field, record, &cache)
 			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", tagAttrs, value))
 		}
 		htmlTable.WriteString("</tr>\n")
 	}
 	htmlTable.WriteString("</tbody>\n</table>")
 
-	curPageUrl := modelName
+	curPageUrl := mConfig.ModelName
 	htmlTable.WriteString(c.buildPagination(totalRecords, c.Config.PaginationRecordsPerPage, pageNum, curPageUrl))
 
 	return htmlTable.String(), nil

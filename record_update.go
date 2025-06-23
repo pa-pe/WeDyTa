@@ -29,8 +29,8 @@ func (c *Impl) Update(ctx *gin.Context) {
 		return
 	}
 
-	config := c.loadModelConfig(ctx, modelName, payload)
-	if config == nil {
+	mConfig := c.loadModelConfig(ctx, modelName, payload)
+	if mConfig == nil {
 		return
 	}
 
@@ -68,10 +68,10 @@ func (c *Impl) Update(ctx *gin.Context) {
 
 	//Prepare the map for updating
 	updateData := make(map[string]interface{})
-	//	if class, ok := config.EditableFields[field]; ok {
+	//	if class, ok := mConfig.EditableFields[field]; ok {
 
-	//for field := range config.EditableFields {
-	for _, field := range config.EditableFields {
+	//for field := range mConfig.EditableFields {
+	for _, field := range mConfig.EditableFields {
 		fieldSnaked := CamelToSnake(field)
 		if value, exists := payload[fieldSnaked]; exists {
 			updateData[fieldSnaked] = value
@@ -88,7 +88,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 	}
 
 	// clean numeric fields
-	fieldTypes, err := c.getTableColumnTypes(config.DbTable)
+	fieldTypes, err := c.getTableColumnTypes(mConfig.DbTable)
 	if err != nil {
 		log.Printf("Wedyta: getTableColumnTypes() error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sql column types"})
@@ -134,7 +134,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
-	if err := c.DB.Table(config.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
+	if err := c.DB.Table(mConfig.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
 		return
 	}
@@ -155,7 +155,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.DB.Table(config.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
+	if err := c.DB.Table(mConfig.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
 		log.Printf("Wedyta: Failed to update model, error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
 		return
@@ -165,7 +165,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 		for field, newValue := range updateData {
 			originalValue, exists := originalData[field]
 			if exists && originalValue != newValue {
-				go c.Config.AfterUpdate(ctx, c.DB, config.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
+				go c.Config.AfterUpdate(ctx, c.DB, mConfig.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
 			}
 		}
 	}

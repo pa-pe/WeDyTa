@@ -74,8 +74,8 @@ func (c *Impl) HandleTableCreateRecord(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-func (c *Impl) RenderAddForm(ctx *gin.Context, config *modelConfig, modelName string) string {
-	if config == nil || len(config.AddableFields) == 0 {
+func (c *Impl) RenderAddForm(ctx *gin.Context, mConfig *modelConfig) string {
+	if mConfig == nil || len(mConfig.AddableFields) == 0 {
 		return ""
 	}
 
@@ -94,28 +94,28 @@ func (c *Impl) RenderAddForm(ctx *gin.Context, config *modelConfig, modelName st
 `)
 
 	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
-        <input type="hidden" name="modelName" value="%s">`+"\n", modelName))
+        <input type="hidden" name="modelName" value="%s">`+"\n", mConfig.ModelName))
 
-	if queryVariableName, exists := config.Parent["queryVariableName"]; exists {
-		if queryVariableValue, exists := config.Parent["queryVariableValue"]; exists {
+	if queryVariableName, exists := mConfig.Parent["queryVariableName"]; exists {
+		if queryVariableValue, exists := mConfig.Parent["queryVariableValue"]; exists {
 			formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", queryVariableName, queryVariableValue))
 		}
 	}
 
 	countFields := 0
-	for _, field := range config.AddableFields {
-		if c.Config.AccessCheckFunc(ctx, modelName, field, "create") != true {
+	for _, field := range mConfig.AddableFields {
+		if c.Config.AccessCheckFunc(ctx, mConfig.ModelName, field, "create") != true {
 			continue
 		}
 
-		label := config.Headers[field]
+		label := mConfig.Headers[field]
 		if label == "" {
 			label = field
 		}
 
 		requiredAttr := ""
 		requiredLabel := ""
-		for _, requiredField := range config.RequiredFields {
+		for _, requiredField := range mConfig.RequiredFields {
 			if requiredField == field {
 				requiredAttr = "required"
 				requiredLabel = ` <span class="required-label">(required)</span>`
