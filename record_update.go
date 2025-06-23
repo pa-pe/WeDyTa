@@ -88,7 +88,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 	}
 
 	// clean numeric fields
-	fieldTypes, err := getTableColumnTypes(c.DB, config.DbTable)
+	fieldTypes, err := c.getTableColumnTypes(config.DbTable)
 	if err != nil {
 		log.Printf("Wedyta: getTableColumnTypes() error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sql column types"})
@@ -134,7 +134,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
-	if err := c.DB.Debug().Table(config.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
+	if err := c.DB.Table(config.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
 		return
 	}
@@ -155,7 +155,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.DB.Debug().Table(config.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
+	if err := c.DB.Table(config.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
 		log.Printf("Wedyta: Failed to update model, error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
 		return

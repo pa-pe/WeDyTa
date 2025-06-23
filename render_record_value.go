@@ -2,12 +2,11 @@ package wedyta
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"log"
 	"strings"
 )
 
-func (c *Impl) renderRecordValue(db *gorm.DB, config *modelConfig, field string, record map[string]interface{}, cache *RenderTableCache) (interface{}, string) {
+func (c *Impl) renderRecordValue(config *modelConfig, field string, record map[string]interface{}, cache *RenderTableCache) (interface{}, string) {
 	//value := record[field]
 	value, exists := record[field]
 	if !exists || value == nil {
@@ -56,12 +55,12 @@ func (c *Impl) renderRecordValue(db *gorm.DB, config *modelConfig, field string,
 				tableName := tableParts[0]
 				fieldName := tableParts[1]
 
-				pkField, err := getPrimaryKeyFieldName(db, tableName)
+				pkField, err := c.getPrimaryKeyFieldName(tableName)
 				if err != nil {
 					log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
 				} else {
 					var relatedValue string
-					err = db.Debug().
+					err = c.DB.
 						Table(tableName).
 						Select(fieldName).
 						Where(fmt.Sprintf("%s = ?", pkField), value).
@@ -88,7 +87,7 @@ func (c *Impl) renderRecordValue(db *gorm.DB, config *modelConfig, field string,
 		foreignKeyValue, ok := record[countConfig.LocalFieldID]
 		var count int64
 		if ok {
-			if err := db.Debug().Table(countConfig.Table).
+			if err := c.DB.Table(countConfig.Table).
 				Where(fmt.Sprintf("%s = ?", countConfig.TargetFieldID), foreignKeyValue).
 				Count(&count).Error; err == nil {
 			}

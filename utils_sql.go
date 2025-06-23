@@ -2,7 +2,6 @@ package wedyta
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"log"
 	"strconv"
 	"strings"
@@ -11,12 +10,12 @@ import (
 
 var primaryKeyCache = make(map[string]string)
 
-func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
+func (c *Impl) getPrimaryKeyFieldName(tableName string) (string, error) {
 	if pk, ok := primaryKeyCache[tableName]; ok {
 		return pk, nil
 	}
 
-	dialector := db.Dialector.Name()
+	dialector := c.DB.Dialector.Name()
 	var columnName string
 	var err error
 
@@ -30,7 +29,7 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 				AND COLUMN_KEY = 'PRI'
 			LIMIT 1
 		`
-		err = db.Raw(query, tableName).Scan(&columnName).Error
+		err = c.DB.Raw(query, tableName).Scan(&columnName).Error
 
 	case "sqlite", "sqlite3":
 		type tableInfo struct {
@@ -42,7 +41,7 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 			PK           int
 		}
 		var columns []tableInfo
-		err = db.Raw(fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)).Scan(&columns).Error
+		err = c.DB.Raw(fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)).Scan(&columns).Error
 		if err == nil {
 			for _, col := range columns {
 				if col.PK == 1 {
@@ -64,7 +63,7 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 			WHERE i.indisprimary AND c.relname = $1
 			LIMIT 1
 		`
-		err = db.Raw(query, tableName).Scan(&columnName).Error
+		err = c.DB.Raw(query, tableName).Scan(&columnName).Error
 	default:
 		err = fmt.Errorf("unsupported database driver: %s", dialector)
 	}
@@ -83,12 +82,12 @@ type ColumnInfo struct {
 	Type string
 }
 
-func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, error) {
+func (c *Impl) getTableColumnTypes(tableName string) (map[string]string, error) {
 	columnTypes := make(map[string]string)
 
 	var results []ColumnInfo
 
-	switch db.Dialector.Name() {
+	switch c.DB.Dialector.Name() {
 	case "mysql":
 		query := `
 			SELECT COLUMN_NAME as name, DATA_TYPE as type
@@ -96,7 +95,7 @@ func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, erro
 			WHERE TABLE_SCHEMA = DATABASE()
 			  AND TABLE_NAME = ?
 		`
-		if err := db.Raw(query, tableName).Scan(&results).Error; err != nil {
+		if err := c.DB.Raw(query, tableName).Scan(&results).Error; err != nil {
 			return nil, err
 		}
 	case "postgres":
@@ -105,7 +104,7 @@ func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, erro
 			FROM information_schema.columns
 			WHERE table_name = ?
 		`
-		if err := db.Raw(query, tableName).Scan(&results).Error; err != nil {
+		if err := c.DB.Raw(query, tableName).Scan(&results).Error; err != nil {
 			return nil, err
 		}
 	case "sqlite", "sqlite3":
@@ -114,7 +113,7 @@ func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, erro
 			Type string
 		}
 		var pragmaResults []pragmaInfo
-		if err := db.Raw(fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)).Scan(&pragmaResults).Error; err != nil {
+		if err := c.DB.Raw(fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)).Scan(&pragmaResults).Error; err != nil {
 			return nil, err
 		}
 		for _, col := range pragmaResults {
@@ -122,7 +121,7 @@ func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, erro
 		}
 		return columnTypes, nil
 	default:
-		return nil, fmt.Errorf("unsupported driver: %s", db.Dialector.Name())
+		return nil, fmt.Errorf("unsupported driver: %s", c.DB.Dialector.Name())
 	}
 
 	for _, col := range results {
@@ -131,9 +130,9 @@ func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, erro
 	return columnTypes, nil
 }
 
-func (c *Impl) getTotalRecords(db *gorm.DB, config *modelConfig) (int64, error) {
+func (c *Impl) getTotalRecords(config *modelConfig) (int64, error) {
 	var totalRecords int64
-	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
+	if err := c.DB.Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
 		return 0, err
 	}
 

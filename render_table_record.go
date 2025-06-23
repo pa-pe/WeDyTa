@@ -3,7 +3,6 @@ package wedyta
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"html/template"
 	"log"
 	"net/http"
@@ -39,7 +38,7 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTableRecord(ctx, c.DB, modelName, config, recID, isUpdateMode)
+	htmlTable, err := c.RenderModelTableRecord(ctx, modelName, config, recID, isUpdateMode)
 	if err != nil {
 		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
@@ -74,18 +73,18 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 	}
 }
 
-func (c *Impl) RenderModelTableRecord(ctx *gin.Context, db *gorm.DB, modelName string, config *modelConfig, recID int64, isUpdateMode bool) (string, error) {
+func (c *Impl) RenderModelTableRecord(ctx *gin.Context, modelName string, config *modelConfig, recID int64, isUpdateMode bool) (string, error) {
 	if config == nil || modelName == "" {
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
-	pkField, err := getPrimaryKeyFieldName(db, config.DbTable)
+	pkField, err := c.getPrimaryKeyFieldName(config.DbTable)
 	if err != nil {
 		return "", err
 	}
 
 	var record map[string]interface{}
-	if err := db.Debug().
+	if err := c.DB.
 		Model(&record).
 		Table(config.DbTable).
 		Where(fmt.Sprintf("%s = %d", pkField, recID)).
@@ -151,7 +150,7 @@ td { width: auto !important; }
 		cache.RelatedData = make(map[string]string)
 		fldCfg := config.FieldConfig[field]
 
-		value, tagAttrs := c.renderRecordValue(db, config, field, record, &cache)
+		value, tagAttrs := c.renderRecordValue(config, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
 			htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s>%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, header, field, value))
 		} else {

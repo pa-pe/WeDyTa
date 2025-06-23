@@ -7,6 +7,9 @@ import (
 )
 
 type Config struct {
+	// Usage of db.Debug()
+	DebugSQL bool
+
 	// Path to the folder where json configurations are located.
 	// Default: config/wedyta
 	ConfigDir string

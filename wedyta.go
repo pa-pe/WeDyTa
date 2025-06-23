@@ -18,43 +18,48 @@ type Impl struct {
 	modelCache map[string]cachedModelConfig
 }
 
-func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
-	if config == nil {
-		// default if no config
-		config = &Config{
+func New(r *gin.Engine, db *gorm.DB, wedytaConfig *Config) *Impl {
+	if wedytaConfig == nil {
+		// default if no wedytaConfig
+		wedytaConfig = &Config{
 			AccessCheckFunc: func(context *gin.Context, modelName, action, fieldName string) bool {
 				return true // default permit all
 			},
 		}
 	}
 
-	if config.ConfigDir == "" {
-		config.ConfigDir = "config/wedyta"
+	if wedytaConfig.ConfigDir == "" {
+		wedytaConfig.ConfigDir = "config/wedyta"
 	}
 
-	if config.HeadersTag == "" {
-		config.HeadersTag = "h2"
+	if wedytaConfig.HeadersTag == "" {
+		wedytaConfig.HeadersTag = "h2"
 	}
 
-	if config.PaginationRecordsPerPage == 0 {
-		config.PaginationRecordsPerPage = 100
+	if wedytaConfig.PaginationRecordsPerPage == 0 {
+		wedytaConfig.PaginationRecordsPerPage = 100
 	}
 
-	if config.BreadcrumbsRootName == "" {
-		config.BreadcrumbsRootName = "Home"
+	if wedytaConfig.BreadcrumbsRootName == "" {
+		wedytaConfig.BreadcrumbsRootName = "Home"
 	}
 
-	if config.BreadcrumbsRootUrl == "" {
-		config.BreadcrumbsRootUrl = "/"
+	if wedytaConfig.BreadcrumbsRootUrl == "" {
+		wedytaConfig.BreadcrumbsRootUrl = "/"
 	}
 
-	if config.BreadcrumbsDivider == "" {
-		config.BreadcrumbsDivider = ">"
+	if wedytaConfig.BreadcrumbsDivider == "" {
+		wedytaConfig.BreadcrumbsDivider = ">"
+	}
+
+	db_ := db
+	if wedytaConfig.DebugSQL {
+		db_ = db.Debug()
 	}
 
 	impl := &Impl{
-		DB:     db,
-		Config: config,
+		DB:     db_,
+		Config: wedytaConfig,
 	}
 
 	//	r.SetHTMLTemplate(loadTemplates())
@@ -69,14 +74,14 @@ func New(r *gin.Engine, db *gorm.DB, config *Config) *Impl {
 	wedytaGroup.StaticFS("/static", http.FS(staticFiles))
 	wedytaGroup.GET("/:modelName", impl.RenderTable)
 	wedytaGroup.GET("/:modelName/:recID", impl.RenderTableRecord)
-	wedytaGroup.GET("/:modelName/:recID/:action", impl.RouteModelRecordAction)
+	wedytaGroup.GET("/:modelName/:recID/:action", impl.routeModelRecordAction)
 	wedytaGroup.POST("/add", impl.HandleTableCreateRecord)
 	wedytaGroup.POST("/update", impl.Update)
 
 	return impl
 }
 
-func (c *Impl) RouteModelRecordAction(ctx *gin.Context) {
+func (c *Impl) routeModelRecordAction(ctx *gin.Context) {
 	action := ctx.Param("action")
 	switch action {
 	case "update":

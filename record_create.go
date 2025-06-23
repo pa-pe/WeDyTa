@@ -66,7 +66,7 @@ func (c *Impl) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.DB.Debug().Table(config.DbTable).Create(insertData).Error; err != nil {
+	if err := c.DB.Table(config.DbTable).Create(insertData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}

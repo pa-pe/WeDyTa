@@ -72,13 +72,13 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string,
 
 	offset := (pageNum - 1) * c.Config.PaginationRecordsPerPage
 
-	totalRecords, err := c.getTotalRecords(db, config)
+	totalRecords, err := c.getTotalRecords(config)
 	if err != nil {
 		return "", err
 	}
 
 	var records []map[string]interface{}
-	if err := db.Debug().
+	if err := db.
 		Table(config.DbTable).
 		Where(config.SqlWhere).
 		Order(config.OrderBy).
@@ -136,7 +136,7 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, modelName string,
 
 		htmlTable.WriteString("<tr" + trClass + ">\n")
 		for _, field := range config.Fields {
-			value, tagAttrs := c.renderRecordValue(db, config, field, record, &cache)
+			value, tagAttrs := c.renderRecordValue(config, field, record, &cache)
 			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", tagAttrs, value))
 		}
 		htmlTable.WriteString("</tr>\n")
