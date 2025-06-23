@@ -92,8 +92,19 @@ func (c *Impl) Update(ctx *gin.Context) {
 		return
 	}
 
+	// filtering the same data
+	for key, newVal := range updateData {
+		if oldVal, exists := originalData[key]; exists {
+			// Приводим к строке для сравнения — учитывает типы вроде []uint8 vs string
+			if fmt.Sprint(oldVal) == fmt.Sprint(newVal) {
+				delete(updateData, key)
+				//log.Printf("field have the same data: %s", key)
+			}
+		}
+	}
+
 	if len(updateData) == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No new data for update"})
 		return
 	}
 
