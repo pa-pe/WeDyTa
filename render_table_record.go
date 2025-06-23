@@ -33,12 +33,12 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 		return
 	}
 
-	config := c.loadModelConfig(ctx, modelName, nil)
-	if config == nil {
+	mConfig := c.loadModelConfig(ctx, modelName, nil)
+	if mConfig == nil {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTableRecord(ctx, modelName, config, recID, isUpdateMode)
+	htmlTable, err := c.RenderModelTableRecord(ctx, mConfig, recID, isUpdateMode)
 	if err != nil {
 		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
@@ -46,10 +46,10 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 
 	if c.Config.Template != "" {
 		ginH := gin.H{
-			"Title":   config.PageTitle,
+			"Title":   mConfig.PageTitle,
 			"Content": template.HTML(htmlTable),
 		}
-		//ginH["Title"] = config.PageTitle
+		//ginH["Title"] = mConfig.PageTitle
 
 		if c.Config.PrepareTemplateVariables != nil {
 			c.Config.PrepareTemplateVariables(ctx, modelName, ginH)
@@ -66,29 +66,29 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 
 		templateContent := string(content)
 
-		templateContent = strings.Replace(templateContent, "{{ .Title }}", config.PageTitle, -1)
+		templateContent = strings.Replace(templateContent, "{{ .Title }}", mConfig.PageTitle, -1)
 		templateContent = strings.Replace(templateContent, "{{ .Content }}", htmlTable, -1)
 
 		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
 	}
 }
 
-func (c *Impl) RenderModelTableRecord(ctx *gin.Context, modelName string, config *modelConfig, recID int64, isUpdateMode bool) (string, error) {
-	if config == nil || modelName == "" {
-		log.Fatalf("configuration not found for model: %s", modelName)
+func (c *Impl) RenderModelTableRecord(ctx *gin.Context, mConfig *modelConfig, recID int64, isUpdateMode bool) (string, error) {
+	if mConfig == nil {
+		log.Fatalf("Wedyta: RenderModelTableRecord(): mConfig == nil")
 	}
 
-	if config.DbTablePrimaryKey == "" {
-		err := fmt.Errorf("empty config.DbTablePrimaryKey for model: %s", modelName)
+	if mConfig.DbTablePrimaryKey == "" {
+		err := fmt.Errorf("empty mConfig.DbTablePrimaryKey for model: %s", mConfig.ModelName)
 		return "", err
 	}
 
 	var record map[string]interface{}
 	if err := c.DB.
 		Model(&record).
-		Table(config.DbTable).
-		Where(fmt.Sprintf("%s = %d", config.DbTablePrimaryKey, recID)).
-		Where(config.SqlWhere).
+		Table(mConfig.DbTable).
+		Where(fmt.Sprintf("%s = %d", mConfig.DbTablePrimaryKey, recID)).
+		Where(mConfig.SqlWhere).
 		Take(&record).Error; err != nil {
 		return "", err
 	}
@@ -96,7 +96,7 @@ func (c *Impl) RenderModelTableRecord(ctx *gin.Context, modelName string, config
 	var htmlTable strings.Builder
 	htmlTable.WriteString(`<link rel="stylesheet" href="/wedyta/static/css/wedyta.css">` + "\n")
 
-	if len(config.EditableFields) > 0 {
+	if len(mConfig.EditableFields) > 0 {
 		htmlTable.WriteString(`
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="/wedyta/static/js/wedyta_update.js"></script>
@@ -113,12 +113,12 @@ td { width: auto !important; }
 
 	htmlTable.WriteString("<div class=\"col\">\n")
 
-	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(c.breadcrumbBuilder(config, fmt.Sprintf("%d", recID)))
+	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
+	htmlTable.WriteString(c.breadcrumbBuilder(mConfig, fmt.Sprintf("%d", recID)))
 
 	if isUpdateMode {
 		var pkValue string
-		value, exists := record[config.DbTablePrimaryKey]
+		value, exists := record[mConfig.DbTablePrimaryKey]
 		if exists {
 			pkValue = fmt.Sprintf("%v", value)
 		} else {
@@ -126,31 +126,31 @@ td { width: auto !important; }
 		}
 
 		htmlTable.WriteString("<form id=\"editForm\">\n")
-		htmlTable.WriteString(" <input type=\"hidden\" name=\"modelName\" value=\"" + config.ModelName + "\">\n")
+		htmlTable.WriteString(" <input type=\"hidden\" name=\"modelName\" value=\"" + mConfig.ModelName + "\">\n")
 		htmlTable.WriteString("<input type=\"hidden\" name=\"id\" value=\"" + pkValue + "\">\n")
 	}
 
-	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "'>\n<tbody>\n<tr>\n")
+	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<tbody>\n<tr>\n")
 
-	for _, field := range config.Fields {
-		header := config.Headers[field]
+	for _, field := range mConfig.Fields {
+		header := mConfig.Headers[field]
 		if header == "" {
-			header = config.Headers[InvertCaseStyle(field)]
+			header = mConfig.Headers[InvertCaseStyle(field)]
 		}
 		if header == "" {
 			header = field
 		}
 
 		titleStr := ""
-		if title, ok := config.Titles[field]; ok {
+		if title, ok := mConfig.Titles[field]; ok {
 			titleStr = fmt.Sprintf(" title='%s'", title)
 		}
 
 		var cache RenderTableCache
 		cache.RelatedData = make(map[string]string)
-		fldCfg := config.FieldConfig[field]
+		fldCfg := mConfig.FieldConfig[field]
 
-		value, tagAttrs := c.renderRecordValue(config, field, record, &cache)
+		value, tagAttrs := c.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
 			htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s>%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, header, field, value))
 		} else {
