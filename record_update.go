@@ -3,8 +3,10 @@ package wedyta
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Update updates the fields of a specified model based on the allowedFields
@@ -85,6 +87,47 @@ func (c *Impl) Update(ctx *gin.Context) {
 		return
 	}
 
+	// clean numeric fields
+	fieldTypes, err := getTableColumnTypes(c.DB, config.DbTable)
+	if err != nil {
+		log.Printf("Wedyta: getTableColumnTypes() error: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sql column types"})
+		return
+	}
+
+	for field, val := range updateData {
+		colType, ok := fieldTypes[field]
+		if !ok {
+			log.Printf("Wedyta: Field '%s' not found in TableColumnTypes", field)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			return
+		}
+
+		if isNumericColumnType(colType) {
+			//log.Printf("dbg isNumeric: %s", field)
+
+			//if cleaned, ok := sanitizeNumericField(val); ok {
+			//	updateData[field] = cleaned
+			//} else {
+			//	delete(updateData, field) // not a digit
+			//}
+
+			cleaned, ok := sanitizeNumericField(val)
+			if !ok {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' expects a numeric value", field)})
+				return
+			}
+
+			original := fmt.Sprint(val)
+			cleanedStr := fmt.Sprint(cleaned)
+
+			if strings.TrimSpace(original) != cleanedStr {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' has invalid formatting (spaces or extra characters)", field)})
+				return
+			}
+		}
+	}
+
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
 	if err := c.DB.Debug().Table(config.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
@@ -109,6 +152,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 	}
 
 	if err := c.DB.Debug().Table(config.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
+		log.Printf("Wedyta: Failed to update model, error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
 		return
 	}
