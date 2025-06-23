@@ -19,7 +19,15 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 		c.somethingWentWrong(ctx, "Can't ParseInt recID="+recIDstr)
 	}
 
-	action := "read"
+	action := ctx.Param("action")
+	isUpdateMode := false
+	if action == "" {
+		action = "read"
+	} else if action == "update" {
+		isUpdateMode = true
+	} else {
+		c.somethingWentWrong(ctx, "Can't ParseInt action="+action)
+	}
 
 	if c.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
 		ctx.String(http.StatusForbidden, "No access RenderTable: "+modelName)
@@ -31,7 +39,7 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTableRecord(ctx, c.DB, modelName, config, recID)
+	htmlTable, err := c.RenderModelTableRecord(ctx, c.DB, modelName, config, recID, isUpdateMode)
 	if err != nil {
 		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
@@ -66,8 +74,7 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 	}
 }
 
-func (c *Impl) RenderModelTableRecord(context *gin.Context, db *gorm.DB, modelName string, config *modelConfig, recID int64) (string, error) {
-	_ = context
+func (c *Impl) RenderModelTableRecord(ctx *gin.Context, db *gorm.DB, modelName string, config *modelConfig, recID int64, isUpdateMode bool) (string, error) {
 	if config == nil || modelName == "" {
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
@@ -97,12 +104,34 @@ func (c *Impl) RenderModelTableRecord(context *gin.Context, db *gorm.DB, modelNa
 `)
 	}
 
+	htmlTable.WriteString(`
+<style>
+table { width: auto !important; }
+th { white-space: nowrap; width: 55px; }
+td { width: auto !important; }
+</style>
+`)
+
 	htmlTable.WriteString("<div class=\"col\">\n")
 
 	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + config.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(c.breadcrumbBuilder(config, fmt.Sprintf("%d", recID)))
 
-	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "' style='width: auto;'>\n<tbody>\n<tr>\n")
+	if isUpdateMode {
+		var pkValue string
+		value, exists := record[pkField]
+		if exists {
+			pkValue = fmt.Sprintf("%v", value)
+		} else {
+			c.somethingWentWrong(ctx, "Can't take primary key value")
+		}
+
+		htmlTable.WriteString("<form id=\"editForm\">\n")
+		htmlTable.WriteString(" <input type=\"hidden\" name=\"modelName\" value=\"" + config.ModelName + "\">\n")
+		htmlTable.WriteString("<input type=\"hidden\" name=\"id\" value=\"" + pkValue + "\">\n")
+	}
+
+	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + modelName + "'>\n<tbody>\n<tr>\n")
 
 	for _, field := range config.Fields {
 		header := config.Headers[field]
@@ -120,11 +149,22 @@ func (c *Impl) RenderModelTableRecord(context *gin.Context, db *gorm.DB, modelNa
 
 		var cache RenderTableCache
 		cache.RelatedData = make(map[string]string)
+		fldCfg := config.FieldConfig[field]
 
 		value, tagAttrs := c.renderRecordValue(db, config, field, record, &cache)
-		htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s>%s:</th>\n <td%s>%v</td>\n</tr>\n", titleStr, header, tagAttrs, value))
+		if isUpdateMode && fldCfg.IsEditable {
+			htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s>%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, header, field, value))
+		} else {
+			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s>%s:</th>\n <td%s>%v</td>\n</tr>\n", titleStr, header, tagAttrs, value))
+		}
 	}
 	htmlTable.WriteString("</tbody>\n</table>\n")
+
+	if isUpdateMode {
+		htmlTable.WriteString("<button type=\"button\" class=\"btn btn-primary\" id=\"saveButton\">Save</button>\n")
+		htmlTable.WriteString("</form>\n")
+	}
+
 	htmlTable.WriteString("</div>\n")
 
 	return htmlTable.String(), nil

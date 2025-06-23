@@ -98,6 +98,11 @@ function animShowStatusContainer(statusContainer, iconTag, animTime, tagCont, dr
 
 
 $(document).ready(function () {
+    // for /wedyta/model/id/update
+    if ($('#editForm').length === 1) {
+        bindSaveButton();
+    }
+
     var currentTd;
 
     // Function to create the modal if it doesn't exist
@@ -134,8 +139,18 @@ $(document).ready(function () {
 
     // Function to bind events to the modal
     function bindModalEvents() {
-        // Save button functionality
-        var form = $('#editForm');
+        bindSaveButton();
+
+        // Close the modal on ESC key press
+        $(document).on('keydown', function (e) {
+            if (e.key === 'Escape') {
+                $('#editModal').modal('hide');
+            }
+        });
+    }
+
+    function bindSaveButton(){
+        const form = $('#editForm');
         $('#saveButton').on('click', function () {
             // var formData = form.serialize();
             // console.log(formData);
@@ -147,13 +162,6 @@ $(document).ready(function () {
                 currentTd.text(newContent);
             }
             $('#editModal').modal('hide');
-        });
-
-        // Close the modal on ESC key press
-        $(document).on('keydown', function (e) {
-            if (e.key === 'Escape') {
-                $('#editModal').modal('hide');
-            }
         });
     }
 
