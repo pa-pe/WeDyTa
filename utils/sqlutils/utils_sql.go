@@ -1,8 +1,10 @@
-package wedyta
+package sqlutils
 
 import (
 	"database/sql"
 	"fmt"
+	"github.com/pa-pe/wedyta/model"
+	"gorm.io/gorm"
 	"log"
 	"strconv"
 	"strings"
@@ -19,13 +21,13 @@ type ColumnSchema struct {
 
 var tableSchemaCache = make(map[string][]ColumnSchema)
 
-func (c *Impl) getTableSchema(tableName string) ([]ColumnSchema, error) {
+func getTableSchema(db *gorm.DB, tableName string) ([]ColumnSchema, error) {
 	if schema, ok := tableSchemaCache[tableName]; ok {
 		return schema, nil
 	}
 
 	var schema []ColumnSchema
-	dialector := c.DB.Dialector.Name()
+	dialector := db.Dialector.Name()
 
 	switch dialector {
 	case "mysql":
@@ -43,7 +45,7 @@ func (c *Impl) getTableSchema(tableName string) ([]ColumnSchema, error) {
 			ColumnDefault sql.NullString `gorm:"column:COLUMN_DEFAULT"`
 		}
 		var results []mysqlCol
-		if err := c.DB.Raw(query, tableName).Scan(&results).Error; err != nil {
+		if err := db.Raw(query, tableName).Scan(&results).Error; err != nil {
 			return nil, err
 		}
 		//fmt.Printf("%+v\n", results) // dbg
@@ -80,7 +82,7 @@ func (c *Impl) getTableSchema(tableName string) ([]ColumnSchema, error) {
 			ColumnDefault sql.NullString
 		}
 		var results []pgCol
-		if err := c.DB.Raw(query, tableName).Scan(&results).Error; err != nil {
+		if err := db.Raw(query, tableName).Scan(&results).Error; err != nil {
 			return nil, err
 		}
 		for _, col := range results {
@@ -103,7 +105,7 @@ func (c *Impl) getTableSchema(tableName string) ([]ColumnSchema, error) {
 		}
 		var results []pragmaInfo
 		query := fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)
-		if err := c.DB.Raw(query).Scan(&results).Error; err != nil {
+		if err := db.Raw(query).Scan(&results).Error; err != nil {
 			return nil, err
 		}
 		for _, col := range results {
@@ -134,16 +136,16 @@ func getPrimaryKeyFieldNameFromSchema(schema []ColumnSchema) (string, error) {
 	return "", fmt.Errorf("primary key not found in schema")
 }
 
-func (c *Impl) getPrimaryKeyFieldName(tableName string) (string, error) {
-	schema, err := c.getTableSchema(tableName)
+func GetPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
+	schema, err := getTableSchema(db, tableName)
 	if err != nil {
 		return "", err
 	}
 	return getPrimaryKeyFieldNameFromSchema(schema)
 }
 
-func (c *Impl) getTableColumnTypes(tableName string) (map[string]string, error) {
-	schema, err := c.getTableSchema(tableName)
+func GetTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, error) {
+	schema, err := getTableSchema(db, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -295,16 +297,16 @@ func safeString(v any) string {
 //	return columnTypes, nil
 //}
 
-func (c *Impl) getTotalRecords(config *modelConfig) (int64, error) {
+func GetTotalRecords(db *gorm.DB, config *model.ModelConfig) (int64, error) {
 	var totalRecords int64
-	if err := c.DB.Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
+	if err := db.Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
 		return 0, err
 	}
 
 	return totalRecords, nil
 }
 
-func isNumericColumnType(sqlType string) bool {
+func IsNumericColumnType(sqlType string) bool {
 	sqlType = strings.ToLower(sqlType)
 
 	switch {
@@ -326,7 +328,7 @@ func isNumericColumnType(sqlType string) bool {
 	}
 }
 
-func sanitizeNumericField(value interface{}) (interface{}, bool) {
+func SanitizeNumericField(value interface{}) (interface{}, bool) {
 	switch v := value.(type) {
 	case string:
 		trimmed := strings.TrimSpace(v)
@@ -351,7 +353,7 @@ func sanitizeNumericField(value interface{}) (interface{}, bool) {
 	}
 }
 
-func extractInt64(value any) int64 {
+func ExtractInt64(value any) int64 {
 	switch v := value.(type) {
 	case int64:
 		return v
@@ -387,7 +389,7 @@ func extractInt64(value any) int64 {
 	return 0
 }
 
-func extractFormattedTime(value any, outputFormat string) string {
+func ExtractFormattedTime(value any, outputFormat string) string {
 	switch v := value.(type) {
 	case time.Time:
 		return v.Format(outputFormat)
@@ -405,7 +407,7 @@ func extractFormattedTime(value any, outputFormat string) string {
 		}
 		return v // fallback
 	case []byte:
-		return extractFormattedTime(string(v), outputFormat)
+		return ExtractFormattedTime(string(v), outputFormat)
 	default:
 		return fmt.Sprintf("%v", value)
 	}

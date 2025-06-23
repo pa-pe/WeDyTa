@@ -1,25 +1,28 @@
-package wedyta
+package service
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"log"
 	"os"
 	"regexp"
 	"strings"
 )
 
-func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *modelConfig {
+func (c *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ModelConfig {
 	if c.modelCache == nil {
-		c.modelCache = make(map[string]cachedModelConfig)
+		c.modelCache = make(map[string]model.CachedModelConfig)
 	}
 
 	configPath := c.Config.ConfigDir + "/" + modelName + ".json"
 
 	stat, err := os.Stat(configPath)
 	if err != nil {
-		c.somethingWentWrong(ctx, fmt.Sprintf("Cannot stat mConfig file for model %s: %v", modelName, err))
+		c.SomethingWentWrong(ctx, fmt.Sprintf("Cannot stat mConfig file for model %s: %v", modelName, err))
 		return nil
 	}
 
@@ -30,14 +33,14 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		c.somethingWentWrong(ctx, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
+		c.SomethingWentWrong(ctx, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
-	var mConfig modelConfig
+	var mConfig model.ModelConfig
 	if err := json.Unmarshal(data, &mConfig); err != nil {
 		//return nil, fmt.Errorf("failed to parse mConfig JSON: %w", err)
-		c.somethingWentWrong(ctx, fmt.Sprintf("Failed to parse mConfig JSON of modelName: %s, err: %v", modelName, err))
+		c.SomethingWentWrong(ctx, fmt.Sprintf("Failed to parse mConfig JSON of modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
@@ -49,7 +52,7 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 		//fmt.Println(parentModelName)
 		mConfig.ParentConfig = c.loadModelConfig(ctx, parentModelName, payload)
 		if mConfig.ParentConfig == nil {
-			c.somethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
+			c.SomethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
 			return nil
 		}
 
@@ -71,13 +74,13 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 	}
 
 	if c.Config.VariableResolver == nil && strings.Contains(mConfig.SqlWhere, "{{") {
-		c.somethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
+		c.SomethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
 		return nil
 	}
 
 	mConfig.SqlWhere = c.resolveVariables(ctx, modelName, mConfig.SqlWhere)
 
-	c.modelCache[modelName] = cachedModelConfig{
+	c.modelCache[modelName] = model.CachedModelConfig{
 		Config:  &mConfig,
 		ModTime: stat.ModTime(),
 	}
@@ -85,16 +88,16 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 	return &mConfig
 }
 
-func (c *Impl) loadModelConfigDefaults(mConfig *modelConfig) {
+func (c *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
 	if mConfig.PageTitle == "" {
 		mConfig.PageTitle = mConfig.ModelName
 	}
 	if mConfig.DbTable == "" {
-		mConfig.DbTable = CamelToSnake(mConfig.ModelName)
+		mConfig.DbTable = utils.CamelToSnake(mConfig.ModelName)
 	}
 
 	var err error
-	mConfig.DbTablePrimaryKey, err = c.getPrimaryKeyFieldName(mConfig.DbTable)
+	mConfig.DbTablePrimaryKey, err = sqlutils.GetPrimaryKeyFieldName(c.DB, mConfig.DbTable)
 	if err != nil {
 		log.Printf("WeDyTa: can't determine primary key for table %s: %v", mConfig.DbTable, err)
 	}
@@ -105,9 +108,9 @@ func (c *Impl) loadModelConfigDefaults(mConfig *modelConfig) {
 	//for _, field := range append(mConfig.AddableFields, mConfig.EditableFields...) {
 }
 
-func (c *Impl) fillFieldConfig(mConfig *modelConfig) {
+func (c *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 	if mConfig.FieldConfig == nil {
-		mConfig.FieldConfig = make(map[string]FieldParams)
+		mConfig.FieldConfig = make(map[string]model.FieldParams)
 	}
 
 	// AddableFields
@@ -145,7 +148,7 @@ func (c *Impl) fillFieldConfig(mConfig *modelConfig) {
 	}
 }
 
-func (c *Impl) resolveVariables(ctx *gin.Context, modelName string, str string) string {
+func (c *Service) resolveVariables(ctx *gin.Context, modelName string, str string) string {
 	if !strings.Contains(str, "{{") {
 		return str
 	}

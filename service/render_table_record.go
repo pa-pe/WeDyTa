@@ -1,8 +1,11 @@
-package wedyta
+package service
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/embed"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,12 +13,12 @@ import (
 	"strings"
 )
 
-func (c *Impl) RenderTableRecord(ctx *gin.Context) {
+func (c *Service) RenderTableRecord(ctx *gin.Context) {
 	modelName := ctx.Param("modelName")
 	recIDstr := ctx.Param("recID")
 	recID, err := strconv.ParseInt(recIDstr, 10, 64)
 	if err != nil {
-		c.somethingWentWrong(ctx, "Can't ParseInt recID="+recIDstr)
+		c.SomethingWentWrong(ctx, "Can't ParseInt recID="+recIDstr)
 	}
 
 	action := ctx.Param("action")
@@ -25,7 +28,7 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 	} else if action == "update" {
 		isUpdateMode = true
 	} else {
-		c.somethingWentWrong(ctx, "Can't ParseInt action="+action)
+		c.SomethingWentWrong(ctx, "Can't ParseInt action="+action)
 	}
 
 	if c.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
@@ -40,7 +43,7 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 
 	htmlTable, err := c.RenderModelTableRecord(ctx, mConfig, recID, isUpdateMode)
 	if err != nil {
-		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
+		c.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
 	}
 
@@ -58,9 +61,9 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, c.Config.Template, ginH)
 	} else {
 		defaultTemplate := "templates/default.tmpl"
-		content, err := embeddedFiles.ReadFile(defaultTemplate)
+		content, err := embed.EmbeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			c.somethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
+			c.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 
@@ -73,7 +76,7 @@ func (c *Impl) RenderTableRecord(ctx *gin.Context) {
 	}
 }
 
-func (c *Impl) RenderModelTableRecord(ctx *gin.Context, mConfig *modelConfig, recID int64, isUpdateMode bool) (string, error) {
+func (c *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelConfig, recID int64, isUpdateMode bool) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTableRecord(): mConfig == nil")
 	}
@@ -122,7 +125,7 @@ td { width: auto !important; }
 		if exists {
 			pkValue = fmt.Sprintf("%v", value)
 		} else {
-			c.somethingWentWrong(ctx, "Can't take primary key value")
+			c.SomethingWentWrong(ctx, "Can't take primary key value")
 		}
 
 		htmlTable.WriteString("<form id=\"editForm\">\n")
@@ -135,7 +138,7 @@ td { width: auto !important; }
 	for _, field := range mConfig.Fields {
 		header := mConfig.Headers[field]
 		if header == "" {
-			header = mConfig.Headers[InvertCaseStyle(field)]
+			header = mConfig.Headers[utils.InvertCaseStyle(field)]
 		}
 		if header == "" {
 			header = field
@@ -146,7 +149,7 @@ td { width: auto !important; }
 			titleStr = fmt.Sprintf(" title='%s'", title)
 		}
 
-		var cache RenderTableCache
+		var cache model.RenderTableCache
 		cache.RelatedData = make(map[string]string)
 		fldCfg := mConfig.FieldConfig[field]
 

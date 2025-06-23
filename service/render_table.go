@@ -1,8 +1,12 @@
-package wedyta
+package service
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/embed"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"gorm.io/gorm"
 	"html/template"
 	"log"
@@ -11,7 +15,7 @@ import (
 	"strings"
 )
 
-func (c *Impl) RenderTable(ctx *gin.Context) {
+func (c *Service) RenderTable(ctx *gin.Context) {
 	modelName := ctx.Param("modelName")
 
 	if c.Config.AccessCheckFunc(ctx, modelName, "", "read") != true {
@@ -26,7 +30,7 @@ func (c *Impl) RenderTable(ctx *gin.Context) {
 
 	htmlTable, err := c.RenderModelTable(ctx, c.DB, mConfig)
 	if err != nil {
-		c.somethingWentWrong(ctx, fmt.Sprintf("RenderModelTable error: %v", err))
+		c.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTable error: %v", err))
 		return
 	}
 
@@ -44,9 +48,9 @@ func (c *Impl) RenderTable(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, c.Config.Template, ginH)
 	} else {
 		defaultTemplate := "templates/default.tmpl"
-		content, err := embeddedFiles.ReadFile(defaultTemplate)
+		content, err := embed.EmbeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			c.somethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
+			c.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 
@@ -59,7 +63,7 @@ func (c *Impl) RenderTable(ctx *gin.Context) {
 	}
 }
 
-func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *modelConfig) (string, error) {
+func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model.ModelConfig) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTable(): mConfig == nil")
 	}
@@ -72,7 +76,7 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *modelCon
 
 	offset := (pageNum - 1) * c.Config.PaginationRecordsPerPage
 
-	totalRecords, err := c.getTotalRecords(mConfig)
+	totalRecords, err := sqlutils.GetTotalRecords(c.DB, mConfig)
 	if err != nil {
 		return "", err
 	}
@@ -107,7 +111,7 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *modelCon
 	for _, field := range mConfig.Fields {
 		header := mConfig.Headers[field]
 		if header == "" {
-			header = mConfig.Headers[InvertCaseStyle(field)]
+			header = mConfig.Headers[utils.InvertCaseStyle(field)]
 		}
 		if header == "" {
 			header = field
@@ -123,7 +127,7 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *modelCon
 	htmlTable.WriteString("</tr>\n</thead>\n<tbody>\n")
 
 	//relatedDataCache := make(map[string]string)
-	var cache RenderTableCache
+	var cache model.RenderTableCache
 	cache.RelatedData = make(map[string]string)
 
 	for _, record := range records {
@@ -149,7 +153,7 @@ func (c *Impl) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *modelCon
 	return htmlTable.String(), nil
 }
 
-func (c *Impl) buildPagination(totalRecords int64, pageSize int, pageNum int, url string) string {
+func (c *Service) buildPagination(totalRecords int64, pageSize int, pageNum int, url string) string {
 	pageCount := int((totalRecords + int64(pageSize) - 1) / int64(pageSize))
 	if pageCount < 2 {
 		return ""

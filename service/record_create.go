@@ -1,13 +1,15 @@
-package wedyta
+package service
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils"
 	"net/http"
 	"strings"
 )
 
-func (c *Impl) HandleTableCreateRecord(ctx *gin.Context) {
+func (c *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	var payload map[string]interface{}
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
@@ -33,7 +35,7 @@ func (c *Impl) HandleTableCreateRecord(ctx *gin.Context) {
 	insertData := make(map[string]interface{})
 	for _, field := range config.AddableFields {
 		if value, exists := payload[field]; exists {
-			insertData[CamelToSnake(field)] = value
+			insertData[utils.CamelToSnake(field)] = value
 		}
 	}
 
@@ -74,7 +76,7 @@ func (c *Impl) HandleTableCreateRecord(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-func (c *Impl) RenderAddForm(ctx *gin.Context, mConfig *modelConfig) string {
+func (c *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) string {
 	if mConfig == nil || len(mConfig.AddableFields) == 0 {
 		return ""
 	}

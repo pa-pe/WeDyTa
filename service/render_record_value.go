@@ -1,16 +1,19 @@
-package wedyta
+package service
 
 import (
 	"fmt"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"log"
 	"strings"
 )
 
-func (c *Impl) renderRecordValue(config *modelConfig, field string, record map[string]interface{}, cache *RenderTableCache) (interface{}, string) {
+func (c *Service) renderRecordValue(config *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
 	//value := record[field]
 	value, exists := record[field]
 	if !exists || value == nil {
-		value, exists = record[InvertCaseStyle(field)]
+		value, exists = record[utils.InvertCaseStyle(field)]
 		if !exists || value == nil {
 			value = ""
 		}
@@ -30,7 +33,7 @@ func (c *Impl) renderRecordValue(config *modelConfig, field string, record map[s
 
 	if fldCfg.IsEditable {
 		classStr += " editable editable-" + fldCfg.FieldEditor
-		additionalAttr += ` fieldName="` + CamelToSnake(field) + `"`
+		additionalAttr += ` fieldName="` + utils.CamelToSnake(field) + `"`
 	}
 
 	classAttr := ""
@@ -48,14 +51,14 @@ func (c *Impl) renderRecordValue(config *modelConfig, field string, record map[s
 		if cachedValue, found := cache.RelatedData[cacheKey]; found {
 			value = cachedValue
 		} else {
-			num := extractInt64(value)
+			num := sqlutils.ExtractInt64(value)
 
 			if num != 0 {
 				tableParts := strings.Split(relatedDataField, ".")
 				tableName := tableParts[0]
 				fieldName := tableParts[1]
 
-				pkField, err := c.getPrimaryKeyFieldName(tableName)
+				pkField, err := sqlutils.GetPrimaryKeyFieldName(c.DB, tableName)
 				if err != nil {
 					log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
 				} else {
@@ -105,7 +108,7 @@ func (c *Impl) renderRecordValue(config *modelConfig, field string, record map[s
 	}
 
 	if dateTimeFieldConfig, dateTimeFieldExists := config.DateTimeFields[field]; dateTimeFieldExists {
-		value = extractFormattedTime(value, dateTimeFieldConfig)
+		value = sqlutils.ExtractFormattedTime(value, dateTimeFieldConfig)
 	}
 
 	return value, tagAttrs

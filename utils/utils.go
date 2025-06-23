@@ -1,4 +1,4 @@
-package wedyta
+package utils
 
 import (
 	"golang.org/x/text/cases"

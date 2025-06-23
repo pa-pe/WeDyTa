@@ -1,8 +1,10 @@
-package wedyta
+package service
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/utils"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,7 +12,7 @@ import (
 )
 
 // Update updates the fields of a specified model based on the allowedFields
-func (c *Impl) Update(ctx *gin.Context) {
+func (c *Service) Update(ctx *gin.Context) {
 	var payload map[string]interface{}
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
@@ -72,7 +74,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 
 	//for field := range mConfig.EditableFields {
 	for _, field := range mConfig.EditableFields {
-		fieldSnaked := CamelToSnake(field)
+		fieldSnaked := utils.CamelToSnake(field)
 		if value, exists := payload[fieldSnaked]; exists {
 			updateData[fieldSnaked] = value
 			allowed = append(allowed, fieldSnaked)
@@ -88,10 +90,10 @@ func (c *Impl) Update(ctx *gin.Context) {
 	}
 
 	// clean numeric fields
-	fieldTypes, err := c.getTableColumnTypes(mConfig.DbTable)
+	fieldTypes, err := sqlutils.GetTableColumnTypes(c.DB, mConfig.DbTable)
 	if err != nil {
 		log.Printf("Wedyta: getTableColumnTypes() error: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sql column types"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sqlutils column types"})
 		return
 	}
 
@@ -103,7 +105,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 			return
 		}
 
-		if isNumericColumnType(colType) {
+		if sqlutils.IsNumericColumnType(colType) {
 			//log.Printf("dbg isNumeric: %s", field)
 
 			//if cleaned, ok := sanitizeNumericField(val); ok {
@@ -112,7 +114,7 @@ func (c *Impl) Update(ctx *gin.Context) {
 			//	delete(updateData, field) // not a digit
 			//}
 
-			cleaned, ok := sanitizeNumericField(val)
+			cleaned, ok := sqlutils.SanitizeNumericField(val)
 			if !ok {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' expects a numeric value", field)})
 				return
