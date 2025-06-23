@@ -121,9 +121,13 @@ func (c *Impl) Update(ctx *gin.Context) {
 			original := fmt.Sprint(val)
 			cleanedStr := fmt.Sprint(cleaned)
 
-			if strings.TrimSpace(original) != cleanedStr {
-				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' has invalid formatting (spaces or extra characters)", field)})
-				return
+			if original != cleanedStr {
+				if strings.TrimSpace(original) == cleanedStr {
+					updateData[field] = strings.TrimSpace(original)
+				} else {
+					ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' has invalid formatting (spaces or extra characters)", field)})
+					return
+				}
 			}
 		}
 	}
