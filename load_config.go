@@ -71,7 +71,7 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 	}
 
 	if c.Config.VariableResolver == nil && strings.Contains(config.SqlWhere, "{{") {
-		c.somethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without Config.VariableResolver modelName=%s", modelName))
+		c.somethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
 		return nil
 	}
 
@@ -92,6 +92,12 @@ func (c *Impl) loadModelConfigDefaults(config *modelConfig) {
 	if config.DbTable == "" {
 		config.DbTable = CamelToSnake(config.ModelName)
 	}
+
+	//if len(config.AddableFields) > 0 || len(config.EditableFields) > 0 {
+	//	// хотя бы один массив НЕ пуст
+	//}
+
+	//for _, field := range append(config.AddableFields, config.EditableFields...) {
 }
 
 func (c *Impl) fillFieldConfig(config *modelConfig) {
