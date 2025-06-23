@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -77,6 +78,59 @@ func getPrimaryKeyFieldName(db *gorm.DB, tableName string) (string, error) {
 	return columnName, nil
 }
 
+type ColumnInfo struct {
+	Name string
+	Type string
+}
+
+func getTableColumnTypes(db *gorm.DB, tableName string) (map[string]string, error) {
+	columnTypes := make(map[string]string)
+
+	var results []ColumnInfo
+
+	switch db.Dialector.Name() {
+	case "mysql":
+		query := `
+			SELECT COLUMN_NAME as name, DATA_TYPE as type
+			FROM INFORMATION_SCHEMA.COLUMNS
+			WHERE TABLE_SCHEMA = DATABASE()
+			  AND TABLE_NAME = ?
+		`
+		if err := db.Raw(query, tableName).Scan(&results).Error; err != nil {
+			return nil, err
+		}
+	case "postgres":
+		query := `
+			SELECT column_name as name, data_type as type
+			FROM information_schema.columns
+			WHERE table_name = ?
+		`
+		if err := db.Raw(query, tableName).Scan(&results).Error; err != nil {
+			return nil, err
+		}
+	case "sqlite", "sqlite3":
+		type pragmaInfo struct {
+			Name string
+			Type string
+		}
+		var pragmaResults []pragmaInfo
+		if err := db.Raw(fmt.Sprintf("PRAGMA table_info(`%s`);", tableName)).Scan(&pragmaResults).Error; err != nil {
+			return nil, err
+		}
+		for _, col := range pragmaResults {
+			columnTypes[col.Name] = strings.ToLower(col.Type)
+		}
+		return columnTypes, nil
+	default:
+		return nil, fmt.Errorf("unsupported driver: %s", db.Dialector.Name())
+	}
+
+	for _, col := range results {
+		columnTypes[col.Name] = strings.ToLower(col.Type)
+	}
+	return columnTypes, nil
+}
+
 func (c *Impl) getTotalRecords(db *gorm.DB, config *modelConfig) (int64, error) {
 	var totalRecords int64
 	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
@@ -84,6 +138,53 @@ func (c *Impl) getTotalRecords(db *gorm.DB, config *modelConfig) (int64, error) 
 	}
 
 	return totalRecords, nil
+}
+
+func isNumericColumnType(sqlType string) bool {
+	sqlType = strings.ToLower(sqlType)
+
+	switch {
+	case strings.HasPrefix(sqlType, "int"), // int, int4, int8, int(11)
+		strings.HasPrefix(sqlType, "bigint"),
+		strings.HasPrefix(sqlType, "smallint"),
+		strings.HasPrefix(sqlType, "tinyint"),
+		strings.HasPrefix(sqlType, "mediumint"),
+		strings.HasPrefix(sqlType, "serial"),
+
+		strings.HasPrefix(sqlType, "float"),
+		strings.HasPrefix(sqlType, "double"),
+		strings.HasPrefix(sqlType, "real"),
+		strings.HasPrefix(sqlType, "numeric"),
+		strings.HasPrefix(sqlType, "decimal"):
+		return true
+	default:
+		return false
+	}
+}
+
+func sanitizeNumericField(value interface{}) (interface{}, bool) {
+	switch v := value.(type) {
+	case string:
+		trimmed := strings.TrimSpace(v)
+		if trimmed == "" {
+			return nil, false
+		}
+		// try to reduce it to a number
+		if i, err := strconv.ParseInt(trimmed, 10, 64); err == nil {
+			return i, true
+		}
+		if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
+			return f, true
+		}
+		return nil, false
+
+	case float64, float32, int, int64, int32, uint, uint64:
+		// already a number
+		return v, true
+
+	default:
+		return nil, false
+	}
 }
 
 func extractInt64(value any) int64 {
