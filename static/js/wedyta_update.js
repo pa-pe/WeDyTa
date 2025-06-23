@@ -20,7 +20,8 @@ function send_update_data(data) {
                 query_result = 1;
 //            statusContainer.animShow(iconSuccess);
 //alert("update ok");
-                location.reload();
+//                 location.reload();
+                window.location.href = window.location.pathname + window.location.search + window.location.hash;
             } else {
                 query_result = 0;
 //            statusContainer.animShow(iconFail);
