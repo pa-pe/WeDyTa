@@ -19,7 +19,7 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 
 	stat, err := os.Stat(configPath)
 	if err != nil {
-		c.somethingWentWrong(ctx, fmt.Sprintf("Cannot stat config file for model %s: %v", modelName, err))
+		c.somethingWentWrong(ctx, fmt.Sprintf("Cannot stat mConfig file for model %s: %v", modelName, err))
 		return nil
 	}
 
@@ -34,114 +34,114 @@ func (c *Impl) loadModelConfig(ctx *gin.Context, modelName string, payload map[s
 		return nil
 	}
 
-	var config modelConfig
-	if err := json.Unmarshal(data, &config); err != nil {
-		//return nil, fmt.Errorf("failed to parse config JSON: %w", err)
-		c.somethingWentWrong(ctx, fmt.Sprintf("Failed to parse config JSON of modelName: %s, err: %v", modelName, err))
+	var mConfig modelConfig
+	if err := json.Unmarshal(data, &mConfig); err != nil {
+		//return nil, fmt.Errorf("failed to parse mConfig JSON: %w", err)
+		c.somethingWentWrong(ctx, fmt.Sprintf("Failed to parse mConfig JSON of modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
-	config.ModelName = modelName
-	c.loadModelConfigDefaults(&config)
-	c.fillFieldConfig(&config)
+	mConfig.ModelName = modelName
+	c.loadModelConfigDefaults(&mConfig)
+	c.fillFieldConfig(&mConfig)
 
-	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
+	if parentModelName, parentExists := mConfig.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
-		config.ParentConfig = c.loadModelConfig(ctx, parentModelName, payload)
-		if config.ParentConfig == nil {
+		mConfig.ParentConfig = c.loadModelConfig(ctx, parentModelName, payload)
+		if mConfig.ParentConfig == nil {
 			c.somethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
 			return nil
 		}
 
-		if queryVariableName, exist := config.Parent["queryVariableName"]; exist {
+		if queryVariableName, exist := mConfig.Parent["queryVariableName"]; exist {
 			//fmt.Println("queryVariableName=" + queryVariableName)
 			if payload != nil {
 				if value, exists := payload[queryVariableName].(string); exists {
-					config.Parent["queryVariableValue"] = value
+					mConfig.Parent["queryVariableValue"] = value
 				}
 			} else {
 				if queryVariableValue, exist := ctx.GetQuery(queryVariableName); exist {
 					//fmt.Println("queryVariableValue=" + queryVariableValue)
-					config.Parent["queryVariableValue"] = queryVariableValue
+					mConfig.Parent["queryVariableValue"] = queryVariableValue
 					//			} else {
-					//				config.Parent["queryVariableValue"] = ""
+					//				mConfig.Parent["queryVariableValue"] = ""
 				}
 			}
 		}
 	}
 
-	if c.Config.VariableResolver == nil && strings.Contains(config.SqlWhere, "{{") {
+	if c.Config.VariableResolver == nil && strings.Contains(mConfig.SqlWhere, "{{") {
 		c.somethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
 		return nil
 	}
 
-	config.SqlWhere = c.resolveVariables(ctx, modelName, config.SqlWhere)
+	mConfig.SqlWhere = c.resolveVariables(ctx, modelName, mConfig.SqlWhere)
 
 	c.modelCache[modelName] = cachedModelConfig{
-		Config:  &config,
+		Config:  &mConfig,
 		ModTime: stat.ModTime(),
 	}
 
-	return &config
+	return &mConfig
 }
 
-func (c *Impl) loadModelConfigDefaults(config *modelConfig) {
-	if config.PageTitle == "" {
-		config.PageTitle = config.ModelName
+func (c *Impl) loadModelConfigDefaults(mConfig *modelConfig) {
+	if mConfig.PageTitle == "" {
+		mConfig.PageTitle = mConfig.ModelName
 	}
-	if config.DbTable == "" {
-		config.DbTable = CamelToSnake(config.ModelName)
+	if mConfig.DbTable == "" {
+		mConfig.DbTable = CamelToSnake(mConfig.ModelName)
 	}
 
 	var err error
-	config.DbTablePrimaryKey, err = c.getPrimaryKeyFieldName(config.DbTable)
+	mConfig.DbTablePrimaryKey, err = c.getPrimaryKeyFieldName(mConfig.DbTable)
 	if err != nil {
-		log.Printf("WeDyTa: can't determine primary key for table %s: %v", config.DbTable, err)
+		log.Printf("WeDyTa: can't determine primary key for table %s: %v", mConfig.DbTable, err)
 	}
-	//if len(config.AddableFields) > 0 || len(config.EditableFields) > 0 {
+	//if len(mConfig.AddableFields) > 0 || len(mConfig.EditableFields) > 0 {
 	//	// хотя бы один массив НЕ пуст
 	//}
 
-	//for _, field := range append(config.AddableFields, config.EditableFields...) {
+	//for _, field := range append(mConfig.AddableFields, mConfig.EditableFields...) {
 }
 
-func (c *Impl) fillFieldConfig(config *modelConfig) {
-	if config.FieldConfig == nil {
-		config.FieldConfig = make(map[string]FieldParams)
+func (c *Impl) fillFieldConfig(mConfig *modelConfig) {
+	if mConfig.FieldConfig == nil {
+		mConfig.FieldConfig = make(map[string]FieldParams)
 	}
 
 	// AddableFields
-	for _, field := range config.AddableFields {
-		param := config.FieldConfig[field]
+	for _, field := range mConfig.AddableFields {
+		param := mConfig.FieldConfig[field]
 		param.IsAddable = true
 		if param.FieldEditor == "" {
 			param.FieldEditor = "textarea"
 		}
-		config.FieldConfig[field] = param
+		mConfig.FieldConfig[field] = param
 	}
 
 	// EditableFields
-	for _, field := range config.EditableFields {
-		param := config.FieldConfig[field]
+	for _, field := range mConfig.EditableFields {
+		param := mConfig.FieldConfig[field]
 		param.IsEditable = true
 		if param.FieldEditor == "" {
 			param.FieldEditor = "textarea"
 		}
-		config.FieldConfig[field] = param
+		mConfig.FieldConfig[field] = param
 	}
 
 	// Required
-	for _, field := range config.RequiredFields {
-		param := config.FieldConfig[field]
+	for _, field := range mConfig.RequiredFields {
+		param := mConfig.FieldConfig[field]
 		param.IsRequired = true
-		config.FieldConfig[field] = param
+		mConfig.FieldConfig[field] = param
 	}
 
 	// Classes
-	for field, class := range config.Classes {
-		param := config.FieldConfig[field]
+	for field, class := range mConfig.Classes {
+		param := mConfig.FieldConfig[field]
 		param.Classes = class
-		config.FieldConfig[field] = param
+		mConfig.FieldConfig[field] = param
 	}
 }
 
