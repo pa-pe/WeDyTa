@@ -13,46 +13,42 @@ import (
 	"strings"
 )
 
-func (c *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ModelConfig {
-	if c.modelCache == nil {
-		c.modelCache = make(map[string]model.CachedModelConfig)
-	}
-
-	configPath := c.Config.ConfigDir + "/" + modelName + ".json"
+func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ModelConfig {
+	configPath := s.Config.ConfigDir + "/" + modelName + ".json"
 
 	stat, err := os.Stat(configPath)
 	if err != nil {
-		c.SomethingWentWrong(ctx, fmt.Sprintf("Cannot stat mConfig file for model %s: %v", modelName, err))
+		s.SomethingWentWrong(ctx, fmt.Sprintf("Cannot stat mConfig file for model %s: %v", modelName, err))
 		return nil
 	}
 
-	cached, found := c.modelCache[modelName]
+	cached, found := s.modelCache[modelName]
 	if found && cached.ModTime.Equal(stat.ModTime()) {
 		return cached.Config
 	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		c.SomethingWentWrong(ctx, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
+		s.SomethingWentWrong(ctx, fmt.Sprintf("No configuration found for modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
 	var mConfig model.ModelConfig
 	if err := json.Unmarshal(data, &mConfig); err != nil {
 		//return nil, fmt.Errorf("failed to parse mConfig JSON: %w", err)
-		c.SomethingWentWrong(ctx, fmt.Sprintf("Failed to parse mConfig JSON of modelName: %s, err: %v", modelName, err))
+		s.SomethingWentWrong(ctx, fmt.Sprintf("Failed to parse mConfig JSON of modelName: %s, err: %v", modelName, err))
 		return nil
 	}
 
 	mConfig.ModelName = modelName
-	c.loadModelConfigDefaults(&mConfig)
-	c.fillFieldConfig(&mConfig)
+	s.loadModelConfigDefaults(&mConfig)
+	s.fillFieldConfig(&mConfig)
 
 	if parentModelName, parentExists := mConfig.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
-		mConfig.ParentConfig = c.loadModelConfig(ctx, parentModelName, payload)
+		mConfig.ParentConfig = s.loadModelConfig(ctx, parentModelName, payload)
 		if mConfig.ParentConfig == nil {
-			c.SomethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
+			s.SomethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
 			return nil
 		}
 
@@ -73,14 +69,14 @@ func (c *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 		}
 	}
 
-	if c.Config.VariableResolver == nil && strings.Contains(mConfig.SqlWhere, "{{") {
-		c.SomethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
+	if s.Config.VariableResolver == nil && strings.Contains(mConfig.SqlWhere, "{{") {
+		s.SomethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
 		return nil
 	}
 
-	mConfig.SqlWhere = c.resolveVariables(ctx, modelName, mConfig.SqlWhere)
+	mConfig.SqlWhere = s.resolveVariables(ctx, modelName, mConfig.SqlWhere)
 
-	c.modelCache[modelName] = model.CachedModelConfig{
+	s.modelCache[modelName] = model.CachedModelConfig{
 		Config:  &mConfig,
 		ModTime: stat.ModTime(),
 	}
@@ -88,7 +84,7 @@ func (c *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 	return &mConfig
 }
 
-func (c *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
+func (s *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
 	if mConfig.PageTitle == "" {
 		mConfig.PageTitle = mConfig.ModelName
 	}
@@ -97,7 +93,7 @@ func (c *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
 	}
 
 	var err error
-	mConfig.DbTablePrimaryKey, err = sqlutils.GetPrimaryKeyFieldName(c.DB, mConfig.DbTable)
+	mConfig.DbTablePrimaryKey, err = sqlutils.GetPrimaryKeyFieldName(s.DB, mConfig.DbTable)
 	if err != nil {
 		log.Printf("WeDyTa: can't determine primary key for table %s: %v", mConfig.DbTable, err)
 	}
@@ -108,7 +104,7 @@ func (c *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
 	//for _, field := range append(mConfig.AddableFields, mConfig.EditableFields...) {
 }
 
-func (c *Service) fillFieldConfig(mConfig *model.ModelConfig) {
+func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 	if mConfig.FieldConfig == nil {
 		mConfig.FieldConfig = make(map[string]model.FieldParams)
 	}
@@ -148,7 +144,7 @@ func (c *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 	}
 }
 
-func (c *Service) resolveVariables(ctx *gin.Context, modelName string, str string) string {
+func (s *Service) resolveVariables(ctx *gin.Context, modelName string, str string) string {
 	if !strings.Contains(str, "{{") {
 		return str
 	}
@@ -169,8 +165,8 @@ func (c *Service) resolveVariables(ctx *gin.Context, modelName string, str strin
 		//if queryValue, exists := queryParams[variable]; exists {
 		//	value = queryValue[0]
 		//} else {
-		if c.Config.VariableResolver != nil {
-			value = c.Config.VariableResolver(ctx, modelName, variable)
+		if s.Config.VariableResolver != nil {
+			value = s.Config.VariableResolver(ctx, modelName, variable)
 		} else {
 
 		}

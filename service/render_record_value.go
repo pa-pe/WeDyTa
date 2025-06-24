@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (c *Service) renderRecordValue(config *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
+func (s *Service) renderRecordValue(config *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
 	//value := record[field]
 	value, exists := record[field]
 	if !exists || value == nil {
@@ -58,12 +58,12 @@ func (c *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 				tableName := tableParts[0]
 				fieldName := tableParts[1]
 
-				pkField, err := sqlutils.GetPrimaryKeyFieldName(c.DB, tableName)
+				pkField, err := sqlutils.GetPrimaryKeyFieldName(s.DB, tableName)
 				if err != nil {
 					log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
 				} else {
 					var relatedValue string
-					err = c.DB.
+					err = s.DB.
 						Table(tableName).
 						Select(fieldName).
 						Where(fmt.Sprintf("%s = ?", pkField), value).
@@ -90,7 +90,7 @@ func (c *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 		foreignKeyValue, ok := record[countConfig.LocalFieldID]
 		var count int64
 		if ok {
-			if err := c.DB.Table(countConfig.Table).
+			if err := s.DB.Table(countConfig.Table).
 				Where(fmt.Sprintf("%s = ?", countConfig.TargetFieldID), foreignKeyValue).
 				Count(&count).Error; err == nil {
 			}

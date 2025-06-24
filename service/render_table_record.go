@@ -13,12 +13,12 @@ import (
 	"strings"
 )
 
-func (c *Service) RenderTableRecord(ctx *gin.Context) {
+func (s *Service) RenderTableRecord(ctx *gin.Context) {
 	modelName := ctx.Param("modelName")
 	recIDstr := ctx.Param("recID")
 	recID, err := strconv.ParseInt(recIDstr, 10, 64)
 	if err != nil {
-		c.SomethingWentWrong(ctx, "Can't ParseInt recID="+recIDstr)
+		s.SomethingWentWrong(ctx, "Can't ParseInt recID="+recIDstr)
 	}
 
 	action := ctx.Param("action")
@@ -28,42 +28,42 @@ func (c *Service) RenderTableRecord(ctx *gin.Context) {
 	} else if action == "update" {
 		isUpdateMode = true
 	} else {
-		c.SomethingWentWrong(ctx, "Can't ParseInt action="+action)
+		s.SomethingWentWrong(ctx, "Can't ParseInt action="+action)
 	}
 
-	if c.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
+	if s.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
 		ctx.String(http.StatusForbidden, "No access RenderTable: "+modelName)
 		return
 	}
 
-	mConfig := c.loadModelConfig(ctx, modelName, nil)
+	mConfig := s.loadModelConfig(ctx, modelName, nil)
 	if mConfig == nil {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTableRecord(ctx, mConfig, recID, isUpdateMode)
+	htmlTable, err := s.RenderModelTableRecord(ctx, mConfig, recID, isUpdateMode)
 	if err != nil {
-		c.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
+		s.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
 	}
 
-	if c.Config.Template != "" {
+	if s.Config.Template != "" {
 		ginH := gin.H{
 			"Title":   mConfig.PageTitle,
 			"Content": template.HTML(htmlTable),
 		}
 		//ginH["Title"] = mConfig.PageTitle
 
-		if c.Config.PrepareTemplateVariables != nil {
-			c.Config.PrepareTemplateVariables(ctx, modelName, ginH)
+		if s.Config.PrepareTemplateVariables != nil {
+			s.Config.PrepareTemplateVariables(ctx, modelName, ginH)
 		}
 
-		ctx.HTML(http.StatusOK, c.Config.Template, ginH)
+		ctx.HTML(http.StatusOK, s.Config.Template, ginH)
 	} else {
 		defaultTemplate := "templates/default.tmpl"
 		content, err := embed.EmbeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			c.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
+			s.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 
@@ -76,7 +76,7 @@ func (c *Service) RenderTableRecord(ctx *gin.Context) {
 	}
 }
 
-func (c *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelConfig, recID int64, isUpdateMode bool) (string, error) {
+func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelConfig, recID int64, isUpdateMode bool) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTableRecord(): mConfig == nil")
 	}
@@ -87,7 +87,7 @@ func (c *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelC
 	}
 
 	var record map[string]interface{}
-	if err := c.DB.
+	if err := s.DB.
 		Model(&record).
 		Table(mConfig.DbTable).
 		Where(fmt.Sprintf("%s = %d", mConfig.DbTablePrimaryKey, recID)).
@@ -116,8 +116,8 @@ td { width: auto !important; }
 
 	htmlTable.WriteString("<div class=\"col\">\n")
 
-	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(c.breadcrumbBuilder(mConfig, fmt.Sprintf("%d", recID)))
+	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
+	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, fmt.Sprintf("%d", recID)))
 
 	if isUpdateMode {
 		var pkValue string
@@ -125,7 +125,7 @@ td { width: auto !important; }
 		if exists {
 			pkValue = fmt.Sprintf("%v", value)
 		} else {
-			c.SomethingWentWrong(ctx, "Can't take primary key value")
+			s.SomethingWentWrong(ctx, "Can't take primary key value")
 		}
 
 		htmlTable.WriteString("<form id=\"editForm\">\n")
@@ -153,7 +153,7 @@ td { width: auto !important; }
 		cache.RelatedData = make(map[string]string)
 		fldCfg := mConfig.FieldConfig[field]
 
-		value, tagAttrs := c.renderRecordValue(mConfig, field, record, &cache)
+		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
 			htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s>%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, header, field, value))
 		} else {

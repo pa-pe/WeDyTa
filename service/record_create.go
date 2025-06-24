@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (c *Service) HandleTableCreateRecord(ctx *gin.Context) {
+func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	var payload map[string]interface{}
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
@@ -22,12 +22,12 @@ func (c *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
-	if c.Config.AccessCheckFunc(ctx, modelName, "", "create") != true {
+	if s.Config.AccessCheckFunc(ctx, modelName, "", "create") != true {
 		ctx.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
 		return
 	}
 
-	config := c.loadModelConfig(ctx, modelName, payload)
+	config := s.loadModelConfig(ctx, modelName, payload)
 	if config == nil {
 		return
 	}
@@ -68,7 +68,7 @@ func (c *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.DB.Table(config.DbTable).Create(insertData).Error; err != nil {
+	if err := s.DB.Table(config.DbTable).Create(insertData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
@@ -76,7 +76,7 @@ func (c *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-func (c *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) string {
+func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) string {
 	if mConfig == nil || len(mConfig.AddableFields) == 0 {
 		return ""
 	}
@@ -86,11 +86,11 @@ func (c *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 <link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
 	<div class="accordion" id="addFormAccordion">
         <div class="accordion-item">
-            <` + c.Config.HeadersTag + ` class="accordion-header" id="addFormHeading">
+            <` + s.Config.HeadersTag + ` class="accordion-header" id="addFormHeading">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#addFormCollapse" aria-expanded="false" aria-controls="addFormCollapse">
                     <i class="bi-plus-square"></i> &nbsp; Add New Record
                 </button>
-            </` + c.Config.HeadersTag + `>
+            </` + s.Config.HeadersTag + `>
             <div id="addFormCollapse" class="accordion-collapse collapse" aria-labelledby="addFormHeading" data-bs-parent="#addFormAccordion">
                 <div class="accordion-body" style="background: rgba(128,128,128,0.1);">
 `)
@@ -106,7 +106,7 @@ func (c *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 
 	countFields := 0
 	for _, field := range mConfig.AddableFields {
-		if c.Config.AccessCheckFunc(ctx, mConfig.ModelName, field, "create") != true {
+		if s.Config.AccessCheckFunc(ctx, mConfig.ModelName, field, "create") != true {
 			continue
 		}
 

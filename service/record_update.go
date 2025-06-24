@@ -12,7 +12,7 @@ import (
 )
 
 // Update updates the fields of a specified model based on the allowedFields
-func (c *Service) Update(ctx *gin.Context) {
+func (s *Service) Update(ctx *gin.Context) {
 	var payload map[string]interface{}
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
@@ -25,13 +25,13 @@ func (c *Service) Update(ctx *gin.Context) {
 		return
 	}
 
-	if c.Config.AccessCheckFunc(ctx, modelName, "", "update") != true {
+	if s.Config.AccessCheckFunc(ctx, modelName, "", "update") != true {
 		//ctx.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "Access denied", "modelName": "$modelName"})
 		return
 	}
 
-	mConfig := c.loadModelConfig(ctx, modelName, payload)
+	mConfig := s.loadModelConfig(ctx, modelName, payload)
 	if mConfig == nil {
 		return
 	}
@@ -90,7 +90,7 @@ func (c *Service) Update(ctx *gin.Context) {
 	}
 
 	// clean numeric fields
-	fieldTypes, err := sqlutils.GetTableColumnTypes(c.DB, mConfig.DbTable)
+	fieldTypes, err := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
 	if err != nil {
 		log.Printf("Wedyta: getTableColumnTypes() error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sqlutils column types"})
@@ -136,7 +136,7 @@ func (c *Service) Update(ctx *gin.Context) {
 
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
-	if err := c.DB.Table(mConfig.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
+	if err := s.DB.Table(mConfig.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
 		return
 	}
@@ -157,17 +157,17 @@ func (c *Service) Update(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.DB.Table(mConfig.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
+	if err := s.DB.Table(mConfig.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {
 		log.Printf("Wedyta: Failed to update model, error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
 		return
 	}
 
-	if c.Config.AfterUpdate != nil {
+	if s.Config.AfterUpdate != nil {
 		for field, newValue := range updateData {
 			originalValue, exists := originalData[field]
 			if exists && originalValue != newValue {
-				go c.Config.AfterUpdate(ctx, c.DB, mConfig.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
+				go s.Config.AfterUpdate(ctx, s.DB, mConfig.DbTable, int64(id), field, fmt.Sprintf("%v", originalValue), fmt.Sprintf("%v", newValue))
 			}
 		}
 	}

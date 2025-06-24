@@ -15,42 +15,42 @@ import (
 	"strings"
 )
 
-func (c *Service) RenderTable(ctx *gin.Context) {
+func (s *Service) RenderTable(ctx *gin.Context) {
 	modelName := ctx.Param("modelName")
 
-	if c.Config.AccessCheckFunc(ctx, modelName, "", "read") != true {
+	if s.Config.AccessCheckFunc(ctx, modelName, "", "read") != true {
 		ctx.String(http.StatusForbidden, "No access RenderTable: "+modelName)
 		return
 	}
 
-	mConfig := c.loadModelConfig(ctx, modelName, nil)
+	mConfig := s.loadModelConfig(ctx, modelName, nil)
 	if mConfig == nil {
 		return
 	}
 
-	htmlTable, err := c.RenderModelTable(ctx, c.DB, mConfig)
+	htmlTable, err := s.RenderModelTable(ctx, s.DB, mConfig)
 	if err != nil {
-		c.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTable error: %v", err))
+		s.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTable error: %v", err))
 		return
 	}
 
-	if c.Config.Template != "" {
+	if s.Config.Template != "" {
 		ginH := gin.H{
 			"Title":   mConfig.PageTitle,
 			"Content": template.HTML(htmlTable),
 		}
 		//ginH["Title"] = mConfig.PageTitle
 
-		if c.Config.PrepareTemplateVariables != nil {
-			c.Config.PrepareTemplateVariables(ctx, modelName, ginH)
+		if s.Config.PrepareTemplateVariables != nil {
+			s.Config.PrepareTemplateVariables(ctx, modelName, ginH)
 		}
 
-		ctx.HTML(http.StatusOK, c.Config.Template, ginH)
+		ctx.HTML(http.StatusOK, s.Config.Template, ginH)
 	} else {
 		defaultTemplate := "templates/default.tmpl"
 		content, err := embed.EmbeddedFiles.ReadFile(defaultTemplate)
 		if err != nil {
-			c.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
+			s.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
 			return
 		}
 
@@ -63,7 +63,7 @@ func (c *Service) RenderTable(ctx *gin.Context) {
 	}
 }
 
-func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model.ModelConfig) (string, error) {
+func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model.ModelConfig) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTable(): mConfig == nil")
 	}
@@ -74,9 +74,9 @@ func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 		pageNum = 1
 	}
 
-	offset := (pageNum - 1) * c.Config.PaginationRecordsPerPage
+	offset := (pageNum - 1) * s.Config.PaginationRecordsPerPage
 
-	totalRecords, err := sqlutils.GetTotalRecords(c.DB, mConfig)
+	totalRecords, err := sqlutils.GetTotalRecords(s.DB, mConfig)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +86,7 @@ func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 		Table(mConfig.DbTable).
 		Where(mConfig.SqlWhere).
 		Order(mConfig.OrderBy).
-		Limit(c.Config.PaginationRecordsPerPage).
+		Limit(s.Config.PaginationRecordsPerPage).
 		Offset(offset).
 		Find(&records).Error; err != nil {
 		return "", err
@@ -102,9 +102,9 @@ func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 `)
 	}
 
-	htmlTable.WriteString(`<` + c.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + c.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(c.breadcrumbBuilder(mConfig, ""))
-	htmlTable.WriteString(c.RenderAddForm(ctx, mConfig))
+	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
+	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, ""))
+	htmlTable.WriteString(s.RenderAddForm(ctx, mConfig))
 
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
@@ -140,7 +140,7 @@ func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 
 		htmlTable.WriteString("<tr" + trClass + ">\n")
 		for _, field := range mConfig.Fields {
-			value, tagAttrs := c.renderRecordValue(mConfig, field, record, &cache)
+			value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", tagAttrs, value))
 		}
 		htmlTable.WriteString("</tr>\n")
@@ -148,12 +148,12 @@ func (c *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 	htmlTable.WriteString("</tbody>\n</table>")
 
 	curPageUrl := mConfig.ModelName
-	htmlTable.WriteString(c.buildPagination(totalRecords, c.Config.PaginationRecordsPerPage, pageNum, curPageUrl))
+	htmlTable.WriteString(s.buildPagination(totalRecords, s.Config.PaginationRecordsPerPage, pageNum, curPageUrl))
 
 	return htmlTable.String(), nil
 }
 
-func (c *Service) buildPagination(totalRecords int64, pageSize int, pageNum int, url string) string {
+func (s *Service) buildPagination(totalRecords int64, pageSize int, pageNum int, url string) string {
 	pageCount := int((totalRecords + int64(pageSize) - 1) / int64(pageSize))
 	if pageCount < 2 {
 		return ""

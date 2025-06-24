@@ -2,10 +2,10 @@ package service
 
 import "github.com/pa-pe/wedyta/model"
 
-func (c *Service) breadcrumbBuilder(config *model.ModelConfig, recID string) string {
-	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '` + c.Config.BreadcrumbsDivider + `';" aria-label="breadcrumb">` + "\n"
+func (s *Service) breadcrumbBuilder(config *model.ModelConfig, recID string) string {
+	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '` + s.Config.BreadcrumbsDivider + `';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
-	breadcrumbStr += `    <li class="breadcrumb-item"><a href="` + c.Config.BreadcrumbsRootUrl + `">` + c.Config.BreadcrumbsRootName + `</a></li>` + "\n"
+	breadcrumbStr += `    <li class="breadcrumb-item"><a href="` + s.Config.BreadcrumbsRootUrl + `">` + s.Config.BreadcrumbsRootName + `</a></li>` + "\n"
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentModelName + `">` + config.ParentConfig.PageTitle + `</a></li>` + "\n"
