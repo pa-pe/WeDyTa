@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/embed"
 	"github.com/pa-pe/wedyta/model"
-	"github.com/pa-pe/wedyta/utils"
 	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"gorm.io/gorm"
 	"html/template"
@@ -109,13 +108,7 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
-		header := mConfig.Headers[field]
-		if header == "" {
-			header = mConfig.Headers[utils.InvertCaseStyle(field)]
-		}
-		if header == "" {
-			header = field
-		}
+		header := mConfig.FieldConfig[field].Header
 
 		titleStr := ""
 		if title, ok := mConfig.Titles[field]; ok {

@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/embed"
 	"github.com/pa-pe/wedyta/model"
-	"github.com/pa-pe/wedyta/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -137,13 +136,7 @@ td { width: auto !important; }
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "' record_id='" + pkValue + "'>\n<tbody>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
-		header := mConfig.Headers[field]
-		if header == "" {
-			header = mConfig.Headers[utils.InvertCaseStyle(field)]
-		}
-		if header == "" {
-			header = field
-		}
+		header := mConfig.FieldConfig[field].Header
 
 		titleStr := ""
 		if title, ok := mConfig.Titles[field]; ok {
