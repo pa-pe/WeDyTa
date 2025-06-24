@@ -107,36 +107,48 @@ $(document).ready(function () {
     var currentTd;
 
     // Function to create the modal if it doesn't exist
-    function createModal() {
-        if ($('#editModal').length === 0) {
-            $('body').append(`
-                <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="editModalLabel">Edit Content</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="editForm">
-                                    <input type="hidden" name="modelName">
-                                    <input type="hidden" name="id">
-                                    <textarea class="form-control" id="editTextarea" rows="5"></textarea>
-                                </form> 
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="saveButton">Save</button>
-                            </div>
-                        </div>
+    function createModal(title, contentHtml) {
+        // remove parent model if exist
+        $('#editModal').remove();
+
+        // adding new one
+        $('body').append(`
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${contentHtml}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveButton">Save</button>
                     </div>
                 </div>
-            `);
+            </div>
+        </div>
+    `);
 
-            // Bind events after creating the modal
-            bindModalEvents();
-        }
+        // Bind events after creating the modal
+        bindModalEvents();
     }
+
+    function buildRecordUpdateForm(modelName, recordId, fieldName, content, isTextarea) {
+        return `
+        <form id="editForm">
+        <input type="hidden" name="modelName" value="${modelName}">
+        <input type="hidden" name="id" value="${recordId}">
+        ${isTextarea
+            ? `<textarea class="form-control" name="${fieldName}" rows="5">${content}</textarea>`
+            : `<input class="form-control" type="text" name="${fieldName}" value="${content}">`
+        }
+        </form>
+    `;
+    }
+
 
     // Function to bind events to the modal
     function bindModalEvents() {
@@ -150,7 +162,7 @@ $(document).ready(function () {
         });
     }
 
-    function bindSaveButton(){
+    function bindSaveButton() {
         const form = $('#editForm');
         $('#saveButton').on('click', function () {
             // var formData = form.serialize();
@@ -166,21 +178,30 @@ $(document).ready(function () {
         });
     }
 
-    // Open the modal on click
-    $('.editable-textarea').on('dblclick', function () {
-        currentTd = $(this);
-        let modelName = currentTd.closest('table').attr("model");
-        let content = currentTd.text();
-        let recordId = currentTd.closest('tr').find('.rec_id').text(); // Get the value from td with class rec_id in the same row
-        let fieldName = currentTd.attr('fieldName');
-        createModal();
-        let form = $('#editForm');
-        form.find('input[name="modelName"]').val(modelName);
-        form.find('input[name="id"]').val(recordId);
-        form.find('textarea').attr("name", fieldName).val(content);
-        //$('#editModal').modal('show');
+    $('.editable-textarea, .editable-input').on('dblclick', function () {
+        const currentTd = $(this);
+        const modelName = currentTd.closest('table').attr("model");
+        const fieldName = currentTd.attr('fieldName');
+        let title = $("#header_of_" + fieldName).text();
+        const content = currentTd.text();
+        const isTextarea = currentTd.hasClass('editable-textarea');
+
+        let recordId = currentTd.closest('table').attr("id");
+        let isTableMode = false
+        if (!recordId) {
+            isTableMode = true;
+            recordId = currentTd.closest('tr').find('.rec_id').text();
+        }
+
+        if (isTableMode) {
+            title = "#" + recordId + " " + title;
+        }
+
+        const formHtml = buildRecordUpdateForm(modelName, recordId, fieldName, content, isTextarea);
+        createModal(title, formHtml);
+
         $('#editModal').modal('show').on('shown.bs.modal', function () {
-            form.find('textarea').focus();
+            $('#editForm').find(isTextarea ? 'textarea' : 'input[type="text"]').focus();
         });
     });
 });
