@@ -119,12 +119,13 @@ td { width: auto !important; }
 	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, fmt.Sprintf("%d", recID)))
 
+	var pkValue string
+	value, exists := record[mConfig.DbTablePrimaryKey]
+	if exists {
+		pkValue = fmt.Sprintf("%v", value)
+	}
 	if isUpdateMode {
-		var pkValue string
-		value, exists := record[mConfig.DbTablePrimaryKey]
-		if exists {
-			pkValue = fmt.Sprintf("%v", value)
-		} else {
+		if pkValue == "" {
 			s.SomethingWentWrong(ctx, "Can't take primary key value")
 		}
 
@@ -133,7 +134,7 @@ td { width: auto !important; }
 		htmlTable.WriteString("<input type=\"hidden\" name=\"id\" value=\"" + pkValue + "\">\n")
 	}
 
-	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<tbody>\n<tr>\n")
+	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "' record_id='" + pkValue + "'>\n<tbody>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
 		header := mConfig.Headers[field]
@@ -157,7 +158,7 @@ td { width: auto !important; }
 		if isUpdateMode && fldCfg.IsEditable {
 			//htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s id=\"header_%s\">%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, field, header, field, value))
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">")
-			htmlTable.WriteString(fmt.Sprintf("<span%s id=\"header_%s\">%s:</span><br>\n", titleStr, field, header))
+			htmlTable.WriteString(fmt.Sprintf("<span%s id=\"header_of_%s\">%s:</span><br>\n", titleStr, field, header))
 
 			switch fldCfg.FieldEditor {
 			case "textarea":
@@ -170,7 +171,7 @@ td { width: auto !important; }
 
 			htmlTable.WriteString("</td>\n</tr>\n")
 		} else {
-			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s id=\"header_%s\">%s:</th>\n <td%s>%v</td>\n</tr>\n", titleStr, field, header, tagAttrs, value))
+			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s id=\"header_of_%s\">%s:</th>\n <td%s>%v</td>\n</tr>\n", titleStr, field, header, tagAttrs, value))
 		}
 	}
 	htmlTable.WriteString("</tbody>\n</table>\n")
