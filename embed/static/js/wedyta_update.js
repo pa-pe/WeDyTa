@@ -186,7 +186,7 @@ $(document).ready(function () {
         const content = currentTd.text();
         const isTextarea = currentTd.hasClass('editable-textarea');
 
-        let recordId = currentTd.closest('table').attr("id");
+        let recordId = currentTd.closest('table').attr("record_id");
         let isTableMode = false
         if (!recordId) {
             isTableMode = true;
