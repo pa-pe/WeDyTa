@@ -122,7 +122,7 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 			titleStr = fmt.Sprintf(" title='%s'", title)
 		}
 
-		htmlTable.WriteString(fmt.Sprintf("<th%s>%s</th>\n", titleStr, header))
+		htmlTable.WriteString(fmt.Sprintf("<th%s id=\"header_of_%s\">%s</th>\n", titleStr, field, header))
 	}
 	htmlTable.WriteString("</tr>\n</thead>\n<tbody>\n")
 
