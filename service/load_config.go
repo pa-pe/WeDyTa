@@ -110,14 +110,17 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 	}
 
 	for _, field := range mConfig.Fields {
+		header := mConfig.Headers[field]
+		if header == "" {
+			header = mConfig.Headers[utils.InvertCaseStyle(field)]
+		}
+		if header == "" {
+			header = field
+		}
+
 		param := mConfig.FieldConfig[field]
-		param.Header = mConfig.Headers[field]
-		if param.Header == "" {
-			param.Header = mConfig.Headers[utils.InvertCaseStyle(field)]
-		}
-		if param.Header == "" {
-			param.Header = field
-		}
+		param.Header = header
+		mConfig.FieldConfig[field] = param
 	}
 
 	columnTypes, _ := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
