@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (s *Service) renderRecordValue(config *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
+func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
 	//value := record[field]
 	value, exists := record[field]
 	if !exists || value == nil {
@@ -20,12 +20,12 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 	}
 
 	var pkValue string
-	pkValueI, exists := record[config.DbTablePrimaryKey]
+	pkValueI, exists := record[mConfig.DbTablePrimaryKey]
 	if exists {
 		pkValue = fmt.Sprintf("%v", pkValueI)
 	}
 
-	fldCfg := config.FieldConfig[field]
+	fldCfg := mConfig.FieldConfig[field]
 
 	classStr := ""
 	additionalAttr := ""
@@ -49,15 +49,15 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 	}
 	tagAttrs := classAttr + additionalAttr
 
-	columnDataFunc, exists := config.ColumnDataFunc[field]
+	columnDataFunc, exists := mConfig.ColumnDataFunc[field]
 	if exists {
 		if columnDataFunc == "stdRecordControls" {
-			value = "<a href=\"/wedyta/" + config.ModelName + "/" + pkValue + "/update\"><i class=\"bi-pen record-control-update\"></i></a>"
+			value = "<a href=\"/wedyta/" + mConfig.ModelName + "/" + pkValue + "/update\"><i class=\"bi-pen record-control-update\"></i></a>"
 			//value = value.(string) + " <i class=\"bi-trash record-control-delete\"></i>"
 		}
 	}
 
-	relatedDataField, relatedExists := config.RelatedData[field]
+	relatedDataField, relatedExists := mConfig.RelatedData[field]
 	if relatedExists {
 		//relatedDataField = utils.CamelToSnake(relatedDataField)
 		cacheKey := fmt.Sprintf("%s_%v", relatedDataField, value)
@@ -88,7 +88,7 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 						//	return "", err
 						//relatedDataCache[cacheKey] = relatedValue
 						cache.RelatedData[cacheKey] = relatedValue
-						//log.Printf("Wedyta config problem model=%s relatedData=%s error: %v", modelName, relatedDataField, err)
+						//log.Printf("Wedyta mConfig problem model=%s relatedData=%s error: %v", modelName, relatedDataField, err)
 						log.Printf("WeDyTa: failed to load related value from %s: %v", tableName, err)
 					} else {
 						value = relatedValue
@@ -100,7 +100,7 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 		}
 	}
 
-	if countConfig, countExists := config.CountRelatedData[field]; countExists {
+	if countConfig, countExists := mConfig.CountRelatedData[field]; countExists {
 		foreignKeyValue, ok := record[countConfig.LocalFieldID]
 		var count int64
 		if ok {
@@ -112,7 +112,7 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 		value = count
 	}
 
-	if linkConfig, linkExists := config.Links[field]; linkExists {
+	if linkConfig, linkExists := mConfig.Links[field]; linkExists {
 		link := linkConfig.Template
 		for key, val := range record {
 			placeholder := fmt.Sprintf("$%s$", key)
@@ -121,7 +121,7 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 		value = fmt.Sprintf("<a href='%s'>%v</a>", link, value)
 	}
 
-	if dateTimeFieldConfig, dateTimeFieldExists := config.DateTimeFields[field]; dateTimeFieldExists {
+	if dateTimeFieldConfig, dateTimeFieldExists := mConfig.DateTimeFields[field]; dateTimeFieldExists {
 		value = sqlutils.ExtractFormattedTime(value, dateTimeFieldConfig)
 	}
 
