@@ -175,6 +175,23 @@ func safeString(v any) string {
 	}
 }
 
+func IsLongTextType(fieldType string) bool {
+	fieldType = strings.ToLower(fieldType)
+	return strings.Contains(fieldType, "text") || fieldType == "json" || strings.HasPrefix(fieldType, "varchar(") && ExtractFieldTypeLength(fieldType) > 255
+}
+
+func ExtractFieldTypeLength(fieldType string) int {
+	// Example: varchar(500)
+	start := strings.Index(fieldType, "(")
+	end := strings.Index(fieldType, ")")
+	if start == -1 || end == -1 || start > end {
+		return 0
+	}
+	numStr := fieldType[start+1 : end]
+	n, _ := strconv.Atoi(numStr)
+	return n
+}
+
 //var primaryKeyCache = make(map[string]string)
 //
 //func (c *Impl) getPrimaryKeyFieldName(tableName string) (string, error) {
