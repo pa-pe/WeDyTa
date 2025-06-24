@@ -109,6 +109,17 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		mConfig.FieldConfig = make(map[string]model.FieldParams)
 	}
 
+	for _, field := range mConfig.Fields {
+		param := mConfig.FieldConfig[field]
+		param.Header = mConfig.Headers[field]
+		if param.Header == "" {
+			param.Header = mConfig.Headers[utils.InvertCaseStyle(field)]
+		}
+		if param.Header == "" {
+			param.Header = field
+		}
+	}
+
 	columnTypes, _ := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
 
 	// AddableFields
