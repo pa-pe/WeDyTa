@@ -93,7 +93,7 @@ func (s *Service) Update(ctx *gin.Context) {
 	fieldTypes, err := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
 	if err != nil {
 		log.Printf("Wedyta: getTableColumnTypes() error: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sqlutils column types"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
@@ -116,7 +116,7 @@ func (s *Service) Update(ctx *gin.Context) {
 
 			cleaned, ok := sqlutils.SanitizeNumericField(val)
 			if !ok {
-				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' expects a numeric value", field)})
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' expects a numeric value", mConfig.FieldConfig[field].Header)})
 				return
 			}
 
