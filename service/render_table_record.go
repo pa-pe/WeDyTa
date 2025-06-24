@@ -147,14 +147,9 @@ td { width: auto !important; }
 		cache.RelatedData = make(map[string]string)
 		fldCfg := mConfig.FieldConfig[field]
 
-		if isUpdateMode {
-			columnDataFunc, exists := mConfig.ColumnDataFunc[field]
-			if exists {
-				if columnDataFunc == "stdRecordControls" {
-					// skip stdRecordControls in isUpdateMode
-					continue
-				}
-			}
+		if isUpdateMode && mConfig.ColumnDataFunc[field] == "stdRecordControls" {
+			// skip stdRecordControls in isUpdateMode
+			continue
 		}
 
 		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
