@@ -21,6 +21,7 @@ type ModelConfig struct {
 	EditableFields    []string                          `json:"editableFields"`
 	FieldEditor       map[string]string                 `json:"fieldsEditor"`
 	NoZeroValueFields []string                          `json:"noZeroValueFields"`
+	ColumnDataFunc    map[string]string                 `json:"columnDataFunc"`
 	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links             map[string]LinkConfig             `json:"links"`
 	Parent            map[string]string                 `json:"parent"`

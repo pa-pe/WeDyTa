@@ -19,6 +19,12 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 		}
 	}
 
+	var pkValue string
+	pkValueI, exists := record[config.DbTablePrimaryKey]
+	if exists {
+		pkValue = fmt.Sprintf("%v", pkValueI)
+	}
+
 	fldCfg := config.FieldConfig[field]
 
 	classStr := ""
@@ -42,6 +48,14 @@ func (s *Service) renderRecordValue(config *model.ModelConfig, field string, rec
 		classAttr = fmt.Sprintf(" class='%s'", classStr)
 	}
 	tagAttrs := classAttr + additionalAttr
+
+	columnDataFunc, exists := config.ColumnDataFunc[field]
+	if exists {
+		if columnDataFunc == "stdRecordControls" {
+			value = "<a href=\"/wedyta/" + config.ModelName + "/" + pkValue + "/update\"><i class=\"bi-pen record-control-update\"></i></a>"
+			//value = value.(string) + " <i class=\"bi-trash record-control-delete\"></i>"
+		}
+	}
 
 	relatedDataField, relatedExists := config.RelatedData[field]
 	if relatedExists {

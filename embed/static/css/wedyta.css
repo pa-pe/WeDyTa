@@ -19,3 +19,6 @@ tr.disabled {
 .white-space-break { white-space: break-spaces; }
 
 textarea { resize: both !important; }
+
+.record-control-update { color: darkgreen; }
+.record-control-delete { color: maroon; }
