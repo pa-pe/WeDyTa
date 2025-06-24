@@ -31,7 +31,7 @@ func (s *Service) RenderTableRecord(ctx *gin.Context) {
 	}
 
 	if s.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
-		ctx.String(http.StatusForbidden, "No access RenderTable: "+modelName)
+		ctx.String(http.StatusForbidden, "Access Denied")
 		return
 	}
 
