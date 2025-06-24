@@ -109,12 +109,19 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		mConfig.FieldConfig = make(map[string]model.FieldParams)
 	}
 
+	columnTypes, _ := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
+
 	// AddableFields
 	for _, field := range mConfig.AddableFields {
 		param := mConfig.FieldConfig[field]
 		param.IsAddable = true
 		if param.FieldEditor == "" {
-			param.FieldEditor = "textarea"
+			//param.FieldEditor = "textarea"
+			if sqlutils.IsLongTextType(columnTypes[field]) {
+				param.FieldEditor = "textarea"
+			} else {
+				param.FieldEditor = "input"
+			}
 		}
 		mConfig.FieldConfig[field] = param
 	}
@@ -124,7 +131,12 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		param := mConfig.FieldConfig[field]
 		param.IsEditable = true
 		if param.FieldEditor == "" {
-			param.FieldEditor = "textarea"
+			//param.FieldEditor = "textarea"
+			if sqlutils.IsLongTextType(columnTypes[field]) {
+				param.FieldEditor = "textarea"
+			} else {
+				param.FieldEditor = "input"
+			}
 		}
 		mConfig.FieldConfig[field] = param
 	}
