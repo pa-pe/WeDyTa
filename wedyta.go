@@ -11,7 +11,8 @@ import (
 var _ = New
 
 func New(r *gin.Engine, db *gorm.DB, cfg *model.Config) *service.Service {
-	impl := service.NewService(db, cfg)
-	controller.RegisterRoutes(r, impl)
-	return impl
+	s := service.NewService(db, cfg)
+	c := controller.NewController(s)
+	c.RegisterRoutes(r)
+	return s
 }
