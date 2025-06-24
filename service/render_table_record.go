@@ -147,6 +147,16 @@ td { width: auto !important; }
 		cache.RelatedData = make(map[string]string)
 		fldCfg := mConfig.FieldConfig[field]
 
+		if isUpdateMode {
+			columnDataFunc, exists := mConfig.ColumnDataFunc[field]
+			if exists {
+				if columnDataFunc == "stdRecordControls" {
+					// skip stdRecordControls in isUpdateMode
+					continue
+				}
+			}
+		}
+
 		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
 			//htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s id=\"header_%s\">%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, field, header, field, value))
