@@ -188,6 +188,13 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		param.Classes = class
 		mConfig.FieldConfig[field] = param
 	}
+
+	for field, linkConfig := range mConfig.Links {
+		if linkConfig.Preset == "self" {
+			linkConfig.Template = "/wedyta/" + mConfig.ModelName + "/$id$"
+			mConfig.Links[field] = linkConfig
+		}
+	}
 }
 
 func (s *Service) resolveVariables(ctx *gin.Context, modelName string, str string) string {
