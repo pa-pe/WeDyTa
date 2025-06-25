@@ -43,6 +43,7 @@ type CountRelatedDataConfig struct {
 }
 
 type LinkConfig struct {
+	Preset   string `json:"preset"`
 	Template string `json:"template"`
 }
 
