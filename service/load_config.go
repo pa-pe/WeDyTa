@@ -191,7 +191,7 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 
 	for field, linkConfig := range mConfig.Links {
 		if linkConfig.Preset == "self" {
-			linkConfig.Template = "/wedyta/" + mConfig.ModelName + "/$id$"
+			linkConfig.Template = "/wedyta/" + mConfig.ModelName + "/$" + mConfig.DbTablePrimaryKey + "$"
 			mConfig.Links[field] = linkConfig
 		}
 	}
