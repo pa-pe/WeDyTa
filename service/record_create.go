@@ -106,6 +106,10 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 
 	countFields := 0
 	for _, field := range mConfig.AddableFields {
+		if !mConfig.FieldConfig[field].PermitDisplayInInsertMode {
+			continue
+		}
+
 		if s.Config.AccessCheckFunc(ctx, mConfig.ModelName, field, "create") != true {
 			continue
 		}

@@ -120,6 +120,26 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 
 		param := mConfig.FieldConfig[field]
 		param.Header = header
+		param.DisplayMode = mConfig.DisplayMode[field]
+		if param.DisplayMode == "" || param.DisplayMode == "*" || param.DisplayMode == "all" {
+			param.PermitDisplayInTableMode = true
+			param.PermitDisplayInRecordMode = true
+			param.PermitDisplayInUpdateMode = true
+			param.PermitDisplayInInsertMode = true
+		} else {
+			if strings.Contains(param.DisplayMode, "table") {
+				param.PermitDisplayInTableMode = true
+			}
+			if strings.Contains(param.DisplayMode, "record") {
+				param.PermitDisplayInRecordMode = true
+			}
+			if strings.Contains(param.DisplayMode, "update") {
+				param.PermitDisplayInUpdateMode = true
+			}
+			if strings.Contains(param.DisplayMode, "insert") {
+				param.PermitDisplayInInsertMode = true
+			}
+		}
 		mConfig.FieldConfig[field] = param
 	}
 

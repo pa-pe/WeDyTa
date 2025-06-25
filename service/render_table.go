@@ -108,6 +108,10 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
+		if !mConfig.FieldConfig[field].PermitDisplayInTableMode {
+			continue
+		}
+
 		header := mConfig.FieldConfig[field].Header
 
 		titleStr := ""
@@ -133,6 +137,10 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 
 		htmlTable.WriteString("<tr" + trClass + ">\n")
 		for _, field := range mConfig.Fields {
+			if !mConfig.FieldConfig[field].PermitDisplayInTableMode {
+				continue
+			}
+
 			value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", tagAttrs, value))
 		}

@@ -136,6 +136,23 @@ td { width: auto !important; }
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "' record_id='" + pkValue + "'>\n<tbody>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
+		fldCfg := mConfig.FieldConfig[field]
+
+		if isUpdateMode {
+			// skip stdRecordControls in isUpdateMode
+			if mConfig.ColumnDataFunc[field] == "stdRecordControls" {
+				continue
+			}
+
+			if !fldCfg.PermitDisplayInUpdateMode {
+				continue
+			}
+		} else {
+			if !fldCfg.PermitDisplayInRecordMode {
+				continue
+			}
+		}
+
 		header := mConfig.FieldConfig[field].Header
 
 		titleStr := ""
@@ -145,12 +162,6 @@ td { width: auto !important; }
 
 		var cache model.RenderTableCache
 		cache.RelatedData = make(map[string]string)
-		fldCfg := mConfig.FieldConfig[field]
-
-		if isUpdateMode && mConfig.ColumnDataFunc[field] == "stdRecordControls" {
-			// skip stdRecordControls in isUpdateMode
-			continue
-		}
 
 		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {

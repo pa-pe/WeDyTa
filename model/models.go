@@ -14,6 +14,7 @@ type ModelConfig struct {
 	Headers           map[string]string                 `json:"headers"`
 	Titles            map[string]string                 `json:"titles"`
 	Classes           map[string]string                 `json:"classes"`
+	DisplayMode       map[string]string                 `json:"displayMode"`
 	DateTimeFields    map[string]string                 `json:"dateTimeFields"`
 	RelatedData       map[string]string                 `json:"relatedData"`
 	AddableFields     []string                          `json:"addableFields"`
@@ -46,12 +47,17 @@ type LinkConfig struct {
 }
 
 type FieldParams struct {
-	Header      string
-	IsAddable   bool
-	IsEditable  bool
-	IsRequired  bool
-	FieldEditor string
-	Classes     string
+	Header                    string
+	IsAddable                 bool
+	IsEditable                bool
+	IsRequired                bool
+	FieldEditor               string
+	Classes                   string
+	DisplayMode               string
+	PermitDisplayInTableMode  bool
+	PermitDisplayInRecordMode bool
+	PermitDisplayInUpdateMode bool
+	PermitDisplayInInsertMode bool
 }
 
 type RenderTableCache struct {
