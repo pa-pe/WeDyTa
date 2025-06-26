@@ -29,6 +29,7 @@ type ModelConfig struct {
 	DbTablePrimaryKey string
 	ParentConfig      *ModelConfig
 	FieldConfig       map[string]FieldParams
+	AdditionalScripts string
 }
 
 type CachedModelConfig struct {
