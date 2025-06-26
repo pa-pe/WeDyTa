@@ -145,6 +145,13 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 
 	columnTypes, _ := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
 
+	// FieldEditor
+	for field, editor := range mConfig.FieldEditor {
+		param := mConfig.FieldConfig[field]
+		param.FieldEditor = editor
+		mConfig.FieldConfig[field] = param
+	}
+
 	// AddableFields
 	for _, field := range mConfig.AddableFields {
 		param := mConfig.FieldConfig[field]
