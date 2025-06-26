@@ -84,6 +84,9 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 	var formBuilder strings.Builder
 	formBuilder.WriteString(`<script src="/wedyta/static/js/wedyta_create.js"></script>
 <link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
+` + mConfig.AdditionalScripts)
+
+	formBuilder.WriteString(`
 	<div class="accordion" id="addFormAccordion">
         <div class="accordion-item">
             <` + s.Config.HeadersTag + ` class="accordion-header" id="addFormHeading">
@@ -136,6 +139,8 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 			formBuilder.WriteString(fmt.Sprintf(`<textarea class="form-control" id="%s" name="%s" %s></textarea>`, field, field, requiredAttr))
 		case "input":
 			formBuilder.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"\">", field, field))
+		case "summernote":
+			formBuilder.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\" %s></textarea>", field, field, requiredAttr))
 		default:
 			formBuilder.WriteString("oops, something went wrong")
 		}

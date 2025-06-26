@@ -102,7 +102,7 @@ func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelC
 		htmlTable.WriteString(`
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="/wedyta/static/js/wedyta_update.js"></script>
-`)
+` + mConfig.AdditionalScripts)
 	}
 
 	htmlTable.WriteString(`
@@ -174,6 +174,8 @@ td { width: auto !important; }
 				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
 			case "input":
 				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\">", field, field, value))
+			case "summernote":
+				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
 			default:
 				htmlTable.WriteString("oops, something went wrong")
 			}
