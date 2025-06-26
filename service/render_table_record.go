@@ -167,13 +167,13 @@ td { width: auto !important; }
 		if isUpdateMode && fldCfg.IsEditable {
 			//htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s id=\"header_%s\">%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, field, header, field, value))
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">")
-			htmlTable.WriteString(fmt.Sprintf("<span%s id=\"header_of_%s\">%s:</span><br>\n", titleStr, field, header))
+			htmlTable.WriteString(fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s:</label><br>\n", titleStr, field, field, header))
 
 			switch fldCfg.FieldEditor {
 			case "textarea":
-				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" name=\"%s\">%v</textarea>", field, value))
+				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
 			case "input":
-				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" name=\"%s\" value=\"%v\">", field, value))
+				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\">", field, field, value))
 			default:
 				htmlTable.WriteString("oops, something went wrong")
 			}
