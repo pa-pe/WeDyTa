@@ -114,10 +114,9 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 			continue
 		}
 
-		label := mConfig.Headers[field]
-		if label == "" {
-			label = field
-		}
+		fldCfg := mConfig.FieldConfig[field]
+
+		label := mConfig.FieldConfig[field].Header
 
 		requiredAttr := ""
 		requiredLabel := ""
@@ -130,10 +129,18 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 		}
 
 		formBuilder.WriteString(fmt.Sprintf(`<div class="mb-3">
-        <label for="%s" class="form-label">%s%s</label>
-        <textarea type="text" class="form-control" id="%s" name="%s" %s></textarea>
-    </div>`, field, label, requiredLabel, field, field, requiredAttr))
-		//		<input type="text" class="form-control" id="%s" name="%s" %s>
+        <label for="%s" class="form-label">%s%s</label>`, field, label, requiredLabel))
+
+		switch fldCfg.FieldEditor {
+		case "textarea":
+			formBuilder.WriteString(fmt.Sprintf(`<textarea class="form-control" id="%s" name="%s" %s></textarea>`, field, field, requiredAttr))
+		case "input":
+			formBuilder.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"\">", field, field))
+		default:
+			formBuilder.WriteString("oops, something went wrong")
+		}
+
+		formBuilder.WriteString(`</div>`)
 
 		countFields++
 	}
