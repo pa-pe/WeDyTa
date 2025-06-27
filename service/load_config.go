@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-var summernoteInitTags = "<link href=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.css\" rel=\"stylesheet\">\n<script src=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.js\"></script>\n"
+var summernoteInitTags = "<link href=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.css\" rel=\"stylesheet\">\n<script src=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.js\"></script>\n<script src=\"/wedyta/static/js/wedyta_init_summernote.js\"></script>\n"
 
 func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ModelConfig {
 	configPath := s.Config.ConfigDir + "/" + modelName + ".json"
@@ -157,7 +157,7 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 			if !strings.Contains(mConfig.AdditionalScripts, summernoteInitTags) {
 				mConfig.AdditionalScripts += summernoteInitTags
 			}
-			mConfig.AdditionalScripts += summernoteConfig(field)
+			mConfig.AdditionalScripts += summernoteConfig(mConfig.ModelName, field)
 		}
 	}
 
@@ -247,30 +247,13 @@ func (s *Service) resolveVariables(ctx *gin.Context, modelName string, str strin
 	return str
 }
 
-func summernoteConfig(field string) string {
-	config := `<script>
-			$(document).ready(function() {
-				$('#` + field + `').summernote({
-				height: 300,
-					callbacks: {
-					onImageUpload: function(files) {
-							const data = new FormData();
-							data.append("file", files[0]);
-
-							fetch('/upload/image', {
-							method: 'POST',
-								body: data
-							})
-							.then(response => response.text())
-							.then(url => {
-								$('#summernote').summernote('insertImage', url);
-							})
-							.catch(error => console.error("Upload failed:", error));
-						}
-					}
-				});
-			});
-			</script>`
+func summernoteConfig(modelName, field string) string {
+	config := `
+<script>
+$(document).ready(function() {
+	initSummernote("` + field + `", "` + modelName + `");
+});
+</script>`
 
 	return config
 }
