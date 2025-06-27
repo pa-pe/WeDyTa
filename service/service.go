@@ -8,14 +8,14 @@ import (
 
 type Service struct {
 	DB         *gorm.DB
-	Config     *model.Config
+	Config     *model.WedytaConfig
 	modelCache map[string]model.CachedModelConfig
 }
 
-func NewService(db *gorm.DB, wedytaConfig *model.Config) *Service {
+func NewService(db *gorm.DB, wedytaConfig *model.WedytaConfig) *Service {
 	if wedytaConfig == nil {
 		// default if no wedytaConfig
-		wedytaConfig = &model.Config{
+		wedytaConfig = &model.WedytaConfig{
 			AccessCheckFunc: func(context *gin.Context, modelName, action, fieldName string) bool {
 				return true // default permit all
 			},

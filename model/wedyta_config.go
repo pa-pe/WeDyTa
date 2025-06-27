@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Config struct {
+type WedytaConfig struct {
 	// Usage of db.Debug()
 	DebugSQL bool
 

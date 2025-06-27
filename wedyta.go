@@ -10,7 +10,7 @@ import (
 
 var _ = New
 
-func New(r *gin.Engine, db *gorm.DB, cfg *model.Config) *service.Service {
+func New(r *gin.Engine, db *gorm.DB, cfg *model.WedytaConfig) *service.Service {
 	s := service.NewService(db, cfg)
 	c := controller.NewController(s)
 	c.RegisterRoutes(r)
