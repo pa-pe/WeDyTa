@@ -12,6 +12,8 @@ func (c *Controller) RegisterRoutes(r *gin.Engine) {
 	s := c.Service
 	//	r.SetHTMLTemplate(loadTemplates())
 
+	r.Static("/uploads", "./uploads")
+
 	staticFiles, err := fs.Sub(embed.EmbeddedFiles, "static")
 	if err != nil {
 		log.Fatalf("failed to initialize static files: %v", err)
@@ -25,6 +27,8 @@ func (c *Controller) RegisterRoutes(r *gin.Engine) {
 	wedytaGroup.GET("/:modelName/:recID/:action", c.routeModelRecordAction)
 	wedytaGroup.POST("/add", s.HandleTableCreateRecord)
 	wedytaGroup.POST("/update", s.Update)
+	wedytaGroup.POST("/upload/check", c.handleUploadCheck)
+	wedytaGroup.POST("/upload/image", c.HandleImageUpload)
 }
 
 func (c *Controller) routeModelRecordAction(ctx *gin.Context) {
