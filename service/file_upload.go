@@ -12,6 +12,13 @@ import (
 )
 
 func (s *Service) CheckUploadPermission(req model.UploadCheckRequest) (model.UploadCheckResponse, error) {
+	if !s.UploadsConfigured {
+		return model.UploadCheckResponse{
+			Allowed: false,
+			Message: "Wedyta uploads not configured.",
+		}, nil
+	}
+
 	if req.ID == "" {
 		return model.UploadCheckResponse{
 			Allowed: false,
@@ -30,6 +37,8 @@ func (s *Service) CheckUploadPermission(req model.UploadCheckRequest) (model.Upl
 		return model.UploadCheckResponse{}, errors.New("incomplete parameters")
 	}
 
+	// TODO: check for module presence
+
 	return model.UploadCheckResponse{
 		Allowed: true,
 		Message: "",
@@ -43,6 +52,10 @@ func (s *Service) CheckUploadPermission(req model.UploadCheckRequest) (model.Upl
 }
 
 func (s *Service) ProcessImageUpload(c *gin.Context) (string, error) {
+	if !s.UploadsConfigured {
+		return "", errors.New("wedyta uploads not configured")
+	}
+
 	recordID := c.PostForm("record_id")
 	modelName := c.PostForm("model")
 	field := c.PostForm("field")

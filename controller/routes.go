@@ -14,6 +14,7 @@ func (c *Controller) RegisterRoutes(r *gin.Engine) {
 
 	if c.Service.Config.FileUploadFolder != "" && c.Service.Config.FileUploadRelativePath != "" {
 		r.Static(c.Service.Config.FileUploadRelativePath, c.Service.Config.FileUploadFolder)
+		c.Service.UploadsConfigured = true
 	}
 
 	staticFiles, err := fs.Sub(embed.EmbeddedFiles, "static")

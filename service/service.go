@@ -7,9 +7,10 @@ import (
 )
 
 type Service struct {
-	DB         *gorm.DB
-	Config     *model.WedytaConfig
-	modelCache map[string]model.CachedModelConfig
+	DB                *gorm.DB
+	Config            *model.WedytaConfig
+	modelCache        map[string]model.CachedModelConfig
+	UploadsConfigured bool
 }
 
 func NewService(db *gorm.DB, wedytaConfig *model.WedytaConfig) *Service {
@@ -51,8 +52,9 @@ func NewService(db *gorm.DB, wedytaConfig *model.WedytaConfig) *Service {
 	}
 
 	return &Service{
-		DB:         db,
-		Config:     wedytaConfig,
-		modelCache: make(map[string]model.CachedModelConfig),
+		DB:                db,
+		Config:            wedytaConfig,
+		modelCache:        make(map[string]model.CachedModelConfig),
+		UploadsConfigured: false,
 	}
 }
