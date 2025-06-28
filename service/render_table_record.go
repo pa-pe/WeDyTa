@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/embed"
 	"github.com/pa-pe/wedyta/model"
+	"html"
 	"html/template"
 	"log"
 	"net/http"
@@ -175,6 +176,14 @@ td { width: auto !important; }
 				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
 			case "input":
 				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\">", field, field, value))
+			case "select":
+				value_ := takeFieldValueFromRecord(field, record)
+				htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_)
+				if err != nil {
+					htmlTable.WriteString("oops")
+				} else {
+					htmlTable.WriteString(htmlSelect)
+				}
 			case "summernote":
 				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
 			default:
@@ -196,4 +205,34 @@ td { width: auto !important; }
 	htmlTable.WriteString("</div>\n")
 
 	return htmlTable.String(), nil
+}
+
+func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataConfig, selected interface{}) (string, error) {
+	var records []map[string]interface{}
+
+	if err := s.DB.
+		Table(rdCfg.TableName).
+		Select([]string{rdCfg.PrimaryKeyFieldName, rdCfg.FieldName}).
+		Find(&records).Error; err != nil {
+		return "", err
+	}
+
+	var htmlSelect strings.Builder
+	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.PrimaryKeyFieldName + `">` + "\n")
+	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "0", "", ""))
+
+	for _, record := range records {
+		val := fmt.Sprint(record[rdCfg.PrimaryKeyFieldName])
+		text := fmt.Sprint(record[rdCfg.FieldName])
+
+		selectedAttr := ""
+		if selected != nil && fmt.Sprint(selected) == val {
+			selectedAttr = ` selected`
+		}
+
+		htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", html.EscapeString(val), selectedAttr, html.EscapeString(text)))
+	}
+
+	htmlSelect.WriteString(`</select>` + "\n")
+	return htmlSelect.String(), nil
 }
