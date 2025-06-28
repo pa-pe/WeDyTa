@@ -1,3 +1,5 @@
+.required-label { opacity: 0.5; font-weight: bold; font-size: 75% }
+
 tr.disabled {
     background: repeating-linear-gradient(
             -45deg,
