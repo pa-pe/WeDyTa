@@ -60,8 +60,16 @@ type FieldParams struct {
 	PermitDisplayInRecordMode bool
 	PermitDisplayInUpdateMode bool
 	PermitDisplayInInsertMode bool
+	RelatedData               *RelatedDataConfig
 }
 
 type RenderTableCache struct {
 	RelatedData map[string]string
+}
+
+type RelatedDataConfig struct {
+	TableAndField       string
+	TableName           string
+	FieldName           string
+	PrimaryKeyFieldName string
 }

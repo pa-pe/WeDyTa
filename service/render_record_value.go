@@ -10,7 +10,6 @@ import (
 )
 
 func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
-	//value := record[field]
 	value, exists := record[field]
 	if !exists || value == nil {
 		value, exists = record[utils.InvertCaseStyle(field)]
@@ -57,44 +56,29 @@ func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, re
 		}
 	}
 
-	relatedDataField, relatedExists := mConfig.RelatedData[field]
-	if relatedExists {
-		//relatedDataField = utils.CamelToSnake(relatedDataField)
-		cacheKey := fmt.Sprintf("%s_%v", relatedDataField, value)
-		//if cachedValue, found := relatedDataCache[cacheKey]; found {
+	if fldCfg.RelatedData != nil {
+		rdCfg := fldCfg.RelatedData
+		cacheKey := fmt.Sprintf("%s_%v", rdCfg.TableAndField, value)
 		if cachedValue, found := cache.RelatedData[cacheKey]; found {
 			value = cachedValue
 		} else {
 			num := sqlutils.ExtractInt64(value)
 
 			if num != 0 {
-				tableParts := strings.Split(relatedDataField, ".")
-				tableName := tableParts[0]
-				fieldName := tableParts[1]
+				var relatedValue string
+				err := s.DB.
+					Table(rdCfg.TableName).
+					Select(rdCfg.FieldName).
+					Where(fmt.Sprintf("%s = ?", rdCfg.PrimaryKeyFieldName), value).
+					Row().
+					Scan(&relatedValue)
 
-				pkField, err := sqlutils.GetPrimaryKeyFieldName(s.DB, tableName)
 				if err != nil {
-					log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
+					cache.RelatedData[cacheKey] = relatedValue
+					log.Printf("WeDyTa: failed to load related value from %s: %v", fldCfg.RelatedData.TableName, err)
 				} else {
-					var relatedValue string
-					err = s.DB.
-						Table(tableName).
-						Select(fieldName).
-						Where(fmt.Sprintf("%s = ?", pkField), value).
-						Row().
-						Scan(&relatedValue)
-
-					if err != nil {
-						//	return "", err
-						//relatedDataCache[cacheKey] = relatedValue
-						cache.RelatedData[cacheKey] = relatedValue
-						//log.Printf("Wedyta mConfig problem model=%s relatedData=%s error: %v", modelName, relatedDataField, err)
-						log.Printf("WeDyTa: failed to load related value from %s: %v", tableName, err)
-					} else {
-						value = relatedValue
-						//relatedDataCache[cacheKey] = relatedValue
-						cache.RelatedData[cacheKey] = relatedValue
-					}
+					value = relatedValue
+					cache.RelatedData[cacheKey] = relatedValue
 				}
 			}
 		}
