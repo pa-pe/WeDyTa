@@ -148,6 +148,7 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		param := mConfig.FieldConfig[field]
 		param.Field = field
 		param.Header = header
+		param.Title = mConfig.Titles[field]
 		param.DisplayMode = mConfig.DisplayMode[field]
 		if param.DisplayMode == "" || param.DisplayMode == "*" || param.DisplayMode == "all" {
 			param.PermitDisplayInTableMode = true

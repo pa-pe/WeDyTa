@@ -51,6 +51,7 @@ type LinkConfig struct {
 type FieldParams struct {
 	Field                     string
 	Header                    string
+	Title                     string
 	IsAddable                 bool
 	IsEditable                bool
 	IsRequired                bool
