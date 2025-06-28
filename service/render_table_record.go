@@ -167,25 +167,31 @@ td { width: auto !important; }
 
 		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
-			//htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s id=\"header_%s\">%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, field, header, field, value))
+			requiredAttr := ""
+			requiredLabel := ""
+			if fldCfg.IsRequired {
+				requiredAttr = " required"
+				requiredLabel = ` <span class="required-label">(required)</span>`
+			}
+
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">")
-			htmlTable.WriteString(fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label><br>\n", titleStr, field, field, header))
+			htmlTable.WriteString(fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label>%s<br>\n", titleStr, field, field, header, requiredLabel))
 
 			switch fldCfg.FieldEditor {
 			case "textarea":
-				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
+				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s>%v</textarea>", field, field, requiredAttr, value))
 			case "input":
-				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\">", field, field, value))
+				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\"%s>", field, field, value, requiredAttr))
 			case "select":
 				value_ := takeFieldValueFromRecord(field, record)
-				htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_)
+				htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_, fldCfg.IsRequired)
 				if err != nil {
 					htmlTable.WriteString("oops")
 				} else {
 					htmlTable.WriteString(htmlSelect)
 				}
 			case "summernote":
-				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\">%v</textarea>", field, field, value))
+				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s>%v</textarea>", field, field, requiredAttr, value))
 			default:
 				htmlTable.WriteString("oops, something went wrong")
 			}
@@ -207,7 +213,7 @@ td { width: auto !important; }
 	return htmlTable.String(), nil
 }
 
-func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataConfig, selected interface{}) (string, error) {
+func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataConfig, selected interface{}, required bool) (string, error) {
 	var records []map[string]interface{}
 
 	if err := s.DB.
@@ -218,8 +224,13 @@ func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataConfig, select
 	}
 
 	var htmlSelect strings.Builder
-	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.PrimaryKeyFieldName + `">` + "\n")
-	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "0", "", ""))
+	requiredAttr := ""
+	if required {
+		requiredAttr = " required"
+	}
+
+	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.PrimaryKeyFieldName + `"` + requiredAttr + `>` + "\n")
+	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "", "", ""))
 
 	for _, record := range records {
 		val := fmt.Sprint(record[rdCfg.PrimaryKeyFieldName])

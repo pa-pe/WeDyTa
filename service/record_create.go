@@ -109,7 +109,9 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 
 	countFields := 0
 	for _, field := range mConfig.AddableFields {
-		if !mConfig.FieldConfig[field].PermitDisplayInInsertMode {
+		fldCfg := mConfig.FieldConfig[field]
+
+		if !fldCfg.PermitDisplayInInsertMode {
 			continue
 		}
 
@@ -117,37 +119,32 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 			continue
 		}
 
-		fldCfg := mConfig.FieldConfig[field]
-
-		label := mConfig.FieldConfig[field].Header
+		label := fldCfg.Header
 
 		requiredAttr := ""
 		requiredLabel := ""
-		for _, requiredField := range mConfig.RequiredFields {
-			if requiredField == field {
-				requiredAttr = "required"
-				requiredLabel = ` <span class="required-label">(required)</span>`
-				break
-			}
+		if fldCfg.IsRequired {
+			requiredAttr = " required"
+			requiredLabel = ` <span class="required-label">(required)</span>`
 		}
 
 		formBuilder.WriteString(fmt.Sprintf(`<div class="mb-3">
-        <label for="%s" class="form-label">%s%s</label>`, field, label, requiredLabel))
+        <label for="%s" class="form-label">%s</label>%s`, field, label, requiredLabel))
 
 		switch fldCfg.FieldEditor {
 		case "textarea":
-			formBuilder.WriteString(fmt.Sprintf(`<textarea class="form-control" id="%s" name="%s" %s></textarea>`, field, field, requiredAttr))
+			formBuilder.WriteString(fmt.Sprintf(`<textarea class="form-control" id="%s" name="%s"%s></textarea>`, field, field, requiredAttr))
 		case "input":
-			formBuilder.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"\">", field, field))
+			formBuilder.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"\"%s>", field, field, requiredAttr))
 		case "select":
-			htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, 0)
+			htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, "", fldCfg.IsRequired)
 			if err != nil {
 				formBuilder.WriteString("oops")
 			} else {
 				formBuilder.WriteString(htmlSelect)
 			}
 		case "summernote":
-			formBuilder.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\" %s></textarea>", field, field, requiredAttr))
+			formBuilder.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s></textarea>", field, field, requiredAttr))
 		default:
 			formBuilder.WriteString("oops, something went wrong")
 		}
