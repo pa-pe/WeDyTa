@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/model"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -101,6 +102,15 @@ func (s *Service) ProcessImageUpload(ctx *gin.Context) (string, error) {
 		return "", fmt.Errorf("unable to check file: %w", err)
 	}
 
+	// validate MimeType
+	ok, err := isAllowedImageMimeType(file)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", errors.New("invalid file content: not an image")
+	}
+
 	// Save
 	if err := saveUploadedFile(ctx, file, savePath); err != nil {
 		return "", errors.New("failed to save file")
@@ -129,6 +139,27 @@ func sanitizeFileName(name string) string {
 		return '_'
 	}, name)
 	return name
+}
+
+// isAllowedImageMimeType checks that the file is indeed an image
+func isAllowedImageMimeType(fileHeader *multipart.FileHeader) (bool, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return false, fmt.Errorf("unable to open file: %w", err)
+	}
+	defer file.Close()
+
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil {
+		return false, fmt.Errorf("unable to read file: %w", err)
+	}
+
+	mimeType := http.DetectContentType(buffer[:n])
+	if strings.HasPrefix(mimeType, "image/") {
+		return true, nil
+	}
+	return false, nil
 }
 
 func saveUploadedFile(c *gin.Context, file *multipart.FileHeader, path string) error {
