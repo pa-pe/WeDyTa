@@ -110,6 +110,7 @@ func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelC
 table { width: auto !important; }
 th { white-space: nowrap; width: 55px; }
 td { width: auto !important; }
+.form-label { font-weight: bold; }
 </style>
 `)
 
@@ -167,7 +168,7 @@ td { width: auto !important; }
 		if isUpdateMode && fldCfg.IsEditable {
 			//htmlTable.WriteString(fmt.Sprintf("<tr>\n <td%s colspan=\"2\"><span%s id=\"header_%s\">%s:</span><br>\n<textarea class=\"form-control\" name=\"%s\">%v</textarea></td>\n</tr>\n", tagAttrs, titleStr, field, header, field, value))
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">")
-			htmlTable.WriteString(fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s:</label><br>\n", titleStr, field, field, header))
+			htmlTable.WriteString(fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label><br>\n", titleStr, field, field, header))
 
 			switch fldCfg.FieldEditor {
 			case "textarea":
@@ -182,7 +183,7 @@ td { width: auto !important; }
 
 			htmlTable.WriteString("</td>\n</tr>\n")
 		} else {
-			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s id=\"header_of_%s\">%s:</th>\n <td%s>%v</td>\n</tr>\n", titleStr, field, header, tagAttrs, value))
+			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s id=\"header_of_%s\">%s</th>\n <td%s>%v</td>\n</tr>\n", titleStr, field, header, tagAttrs, value))
 		}
 	}
 	htmlTable.WriteString("</tbody>\n</table>\n")
