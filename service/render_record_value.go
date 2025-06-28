@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
+func takeFieldValueFromRecord(field string, record map[string]interface{}) interface{} {
 	value, exists := record[field]
 	if !exists || value == nil {
 		value, exists = record[utils.InvertCaseStyle(field)]
@@ -17,6 +17,12 @@ func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, re
 			value = ""
 		}
 	}
+
+	return value
+}
+
+func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
+	value := takeFieldValueFromRecord(field, record)
 
 	var pkValue string
 	pkValueI, exists := record[mConfig.DbTablePrimaryKey]
