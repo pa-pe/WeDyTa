@@ -111,6 +111,31 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		mConfig.FieldConfig = make(map[string]model.FieldParams)
 	}
 
+	// RelatedData
+	for field, relatedData := range mConfig.RelatedData {
+		//relatedData = utils.CamelToSnake(relatedData)
+		parts := strings.Split(relatedData, ".")
+		tableName := parts[0]
+		fieldName := parts[1]
+
+		if tableName != "" && fieldName != "" {
+
+			pkField, err := sqlutils.GetPrimaryKeyFieldName(s.DB, tableName)
+			if err != nil {
+				log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
+			} else {
+				param := mConfig.FieldConfig[field]
+				param.RelatedData = &model.RelatedDataConfig{
+					TableAndField:       relatedData,
+					TableName:           tableName,
+					FieldName:           fieldName,
+					PrimaryKeyFieldName: pkField,
+				}
+				mConfig.FieldConfig[field] = param
+			}
+		}
+	}
+
 	for _, field := range mConfig.Fields {
 		header := mConfig.Headers[field]
 		if header == "" {
@@ -142,6 +167,11 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 				param.PermitDisplayInInsertMode = true
 			}
 		}
+
+		if mConfig.FieldConfig[field].RelatedData != nil {
+			param.FieldEditor = "select"
+		}
+
 		mConfig.FieldConfig[field] = param
 	}
 
@@ -208,31 +238,6 @@ func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
 		if linkConfig.Preset == "self" {
 			linkConfig.Template = "/wedyta/" + mConfig.ModelName + "/$" + mConfig.DbTablePrimaryKey + "$"
 			mConfig.Links[field] = linkConfig
-		}
-	}
-
-	// RelatedData
-	for field, relatedData := range mConfig.RelatedData {
-		//relatedData = utils.CamelToSnake(relatedData)
-		parts := strings.Split(relatedData, ".")
-		tableName := parts[0]
-		fieldName := parts[1]
-
-		if tableName != "" && fieldName != "" {
-
-			pkField, err := sqlutils.GetPrimaryKeyFieldName(s.DB, tableName)
-			if err != nil {
-				log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
-			} else {
-				param := mConfig.FieldConfig[field]
-				param.RelatedData = &model.RelatedDataConfig{
-					TableAndField:       relatedData,
-					TableName:           tableName,
-					FieldName:           fieldName,
-					PrimaryKeyFieldName: pkField,
-				}
-				mConfig.FieldConfig[field] = param
-			}
 		}
 	}
 }
