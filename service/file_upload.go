@@ -92,7 +92,7 @@ func (s *Service) ProcessImageUpload(ctx *gin.Context) (string, error) {
 	}
 
 	// path to: uploads/modelName/recordID/
-	uploadDir := filepath.Join("uploads", modelName, recordID)
+	uploadDir := filepath.Join(s.Config.FileUploadFolder, modelName, recordID)
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory: %w", err)
 	}
