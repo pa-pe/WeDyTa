@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func (s *Service) CheckUploadPermission(req model.UploadCheckRequest) (model.UploadCheckResponse, error) {
+func (s *Service) CheckUploadPermission(ctx *gin.Context, req model.UploadCheckRequest) (model.UploadCheckResponse, error) {
 	if !s.UploadsConfigured {
 		return model.UploadCheckResponse{
 			Allowed: false,
@@ -37,7 +37,11 @@ func (s *Service) CheckUploadPermission(req model.UploadCheckRequest) (model.Upl
 		return model.UploadCheckResponse{}, errors.New("incomplete parameters")
 	}
 
-	// TODO: check for module presence
+	// check for model presence
+	mConfig := s.loadModelConfig(ctx, req.Model, nil)
+	if mConfig == nil {
+		return model.UploadCheckResponse{}, errors.New("incomplete model=" + req.Model)
+	}
 
 	return model.UploadCheckResponse{
 		Allowed: true,
@@ -51,20 +55,20 @@ func (s *Service) CheckUploadPermission(req model.UploadCheckRequest) (model.Upl
 	//}, nil
 }
 
-func (s *Service) ProcessImageUpload(c *gin.Context) (string, error) {
+func (s *Service) ProcessImageUpload(ctx *gin.Context) (string, error) {
 	if !s.UploadsConfigured {
 		return "", errors.New("wedyta uploads not configured")
 	}
 
-	recordID := c.PostForm("record_id")
-	modelName := c.PostForm("model")
-	field := c.PostForm("field")
+	recordID := ctx.PostForm("record_id")
+	modelName := ctx.PostForm("model")
+	field := ctx.PostForm("field")
 
 	if recordID == "" || modelName == "" || field == "" {
 		return "", errors.New("missing required parameters")
 	}
 
-	file, err := c.FormFile("file")
+	file, err := ctx.FormFile("file")
 	if err != nil {
 		return "", errors.New("no file uploaded")
 	}
@@ -75,28 +79,34 @@ func (s *Service) ProcessImageUpload(c *gin.Context) (string, error) {
 
 	originalName := sanitizeFileName(file.Filename)
 
-	// Путь к папке: uploads/modelName/recordID/
+	// check for model presence
+	mConfig := s.loadModelConfig(ctx, modelName, nil)
+	if mConfig == nil {
+		return "", errors.New("incomplete model=" + modelName)
+	}
+
+	// path to: uploads/modelName/recordID/
 	uploadDir := filepath.Join("uploads", modelName, recordID)
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	// Абсолютный путь к файлу
+	// Absolute path to file
 	savePath := filepath.Join(uploadDir, originalName)
 
-	// Проверка: если файл уже существует — ошибка
+	// Check: if the file already exists - error
 	if _, err := os.Stat(savePath); err == nil {
 		return "", errors.New("file with this name already exists")
 	} else if !os.IsNotExist(err) {
 		return "", fmt.Errorf("unable to check file: %w", err)
 	}
 
-	// Сохраняем
-	if err := saveUploadedFile(c, file, savePath); err != nil {
+	// Save
+	if err := saveUploadedFile(ctx, file, savePath); err != nil {
 		return "", errors.New("failed to save file")
 	}
 
-	// Относительный путь к изображению
+	// Relative path to image
 	imageURL := "/" + filepath.ToSlash(savePath) // web URL style
 	return imageURL, nil
 }
