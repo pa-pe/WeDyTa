@@ -49,6 +49,7 @@ type LinkConfig struct {
 }
 
 type FieldParams struct {
+	Field                     string
 	Header                    string
 	IsAddable                 bool
 	IsEditable                bool
