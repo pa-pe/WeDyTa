@@ -154,11 +154,11 @@ td { width: auto !important; }
 			}
 		}
 
-		header := mConfig.FieldConfig[field].Header
+		header := fldCfg.Header
 
 		titleStr := ""
-		if title, ok := mConfig.Titles[field]; ok {
-			titleStr = fmt.Sprintf(" title='%s'", title)
+		if fldCfg.Title != "" {
+			titleStr = fmt.Sprintf(" title='%s'", fldCfg.Title)
 		}
 
 		var cache model.RenderTableCache
@@ -166,35 +166,10 @@ td { width: auto !important; }
 
 		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
-			requiredAttr := ""
-			requiredLabel := ""
-			if fldCfg.IsRequired {
-				requiredAttr = " required"
-				requiredLabel = ` <span class="required-label">(required)</span>`
-			}
-
+			labelTag, fieldTag := s.renderFormInputTag(&fldCfg, record, value)
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">")
-			htmlTable.WriteString(fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label>%s<br>\n", titleStr, field, field, header, requiredLabel))
-
-			switch fldCfg.FieldEditor {
-			case "textarea":
-				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s>%v</textarea>", field, field, requiredAttr, value))
-			case "input":
-				htmlTable.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\"%s>", field, field, value, requiredAttr))
-			case "select":
-				value_ := takeFieldValueFromRecord(field, record)
-				htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_, fldCfg.IsRequired)
-				if err != nil {
-					htmlTable.WriteString("oops")
-				} else {
-					htmlTable.WriteString(htmlSelect)
-				}
-			case "summernote":
-				htmlTable.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s>%v</textarea>", field, field, requiredAttr, value))
-			default:
-				htmlTable.WriteString("oops, something went wrong")
-			}
-
+			htmlTable.WriteString(labelTag)
+			htmlTable.WriteString(fieldTag)
 			htmlTable.WriteString("</td>\n</tr>\n")
 		} else {
 			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s id=\"header_of_%s\">%s</th>\n <td%s>%v</td>\n</tr>\n", titleStr, field, header, tagAttrs, value))
