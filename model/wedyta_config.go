@@ -39,6 +39,12 @@ type WedytaConfig struct {
 	// BreadcrumbsDivider default '>'
 	BreadcrumbsDivider string
 
+	// example: ./uploads
+	FileUploadFolder string
+
+	// example: /uploads
+	FileUploadRelativePath string
+
 	// VariableResolver the function to which the variable name will be passed to get the value
 	VariableResolver func(context *gin.Context, modelName string, variableName string) string
 

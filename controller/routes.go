@@ -12,7 +12,9 @@ func (c *Controller) RegisterRoutes(r *gin.Engine) {
 	s := c.Service
 	//	r.SetHTMLTemplate(loadTemplates())
 
-	r.Static("/uploads", "./uploads")
+	if c.Service.Config.FileUploadFolder != "" && c.Service.Config.FileUploadRelativePath != "" {
+		r.Static(c.Service.Config.FileUploadRelativePath, c.Service.Config.FileUploadFolder)
+	}
 
 	staticFiles, err := fs.Sub(embed.EmbeddedFiles, "static")
 	if err != nil {
