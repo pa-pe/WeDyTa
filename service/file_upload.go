@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -86,6 +87,10 @@ func (s *Service) ProcessImageUpload(ctx *gin.Context) (string, error) {
 		return "", errors.New("incomplete model=" + modelName)
 	}
 
+	if !isValidUploadPathComponent(modelName) || !isValidUploadPathComponent(recordID) {
+		return "", errors.New("invalid model name or record ID")
+	}
+
 	// path to: uploads/modelName/recordID/
 	uploadDir := filepath.Join("uploads", modelName, recordID)
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
@@ -139,6 +144,12 @@ func sanitizeFileName(name string) string {
 		return '_'
 	}, name)
 	return name
+}
+
+// isValidUploadPathComponent checks if the path component is valid
+func isValidUploadPathComponent(input string) bool {
+	valid := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	return valid.MatchString(input)
 }
 
 // isAllowedImageMimeType checks that the file is indeed an image
