@@ -139,6 +139,13 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 			formBuilder.WriteString(fmt.Sprintf(`<textarea class="form-control" id="%s" name="%s" %s></textarea>`, field, field, requiredAttr))
 		case "input":
 			formBuilder.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"\">", field, field))
+		case "select":
+			htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, 0)
+			if err != nil {
+				formBuilder.WriteString("oops")
+			} else {
+				formBuilder.WriteString(htmlSelect)
+			}
 		case "summernote":
 			formBuilder.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\" %s></textarea>", field, field, requiredAttr))
 		default:
