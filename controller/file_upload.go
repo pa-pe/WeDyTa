@@ -16,7 +16,7 @@ func (c *Controller) handleUploadCheck(ctx *gin.Context) {
 		return
 	}
 
-	res, err := c.Service.CheckUploadPermission(req)
+	res, err := c.Service.CheckUploadPermission(ctx, req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, model.UploadCheckResponse{
 			Allowed: false,
