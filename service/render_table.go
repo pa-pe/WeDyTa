@@ -3,11 +3,9 @@ package service
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pa-pe/wedyta/embed"
 	"github.com/pa-pe/wedyta/model"
 	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"gorm.io/gorm"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -33,33 +31,7 @@ func (s *Service) RenderTable(ctx *gin.Context) {
 		return
 	}
 
-	if s.Config.Template != "" {
-		ginH := gin.H{
-			"Title":   mConfig.PageTitle,
-			"Content": template.HTML(htmlTable),
-		}
-		//ginH["Title"] = mConfig.PageTitle
-
-		if s.Config.PrepareTemplateVariables != nil {
-			s.Config.PrepareTemplateVariables(ctx, modelName, ginH)
-		}
-
-		ctx.HTML(http.StatusOK, s.Config.Template, ginH)
-	} else {
-		defaultTemplate := "templates/default.tmpl"
-		content, err := embed.EmbeddedFiles.ReadFile(defaultTemplate)
-		if err != nil {
-			s.SomethingWentWrong(ctx, "Failed to load default template: "+defaultTemplate)
-			return
-		}
-
-		templateContent := string(content)
-
-		templateContent = strings.Replace(templateContent, "{{ .Title }}", mConfig.PageTitle, -1)
-		templateContent = strings.Replace(templateContent, "{{ .Content }}", htmlTable, -1)
-
-		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(templateContent))
-	}
+	s.RenderPage(ctx, mConfig, htmlTable)
 }
 
 func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model.ConfigOfModel) (string, error) {
