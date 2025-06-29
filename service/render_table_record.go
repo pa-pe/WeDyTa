@@ -167,9 +167,9 @@ td { width: auto !important; }
 		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
 			labelTag, fieldTag := s.renderFormInputTag(&fldCfg, record, value)
-			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">")
-			htmlTable.WriteString(labelTag)
-			htmlTable.WriteString(fieldTag)
+			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">\n")
+			htmlTable.WriteString(labelTag + "<br>\n")
+			htmlTable.WriteString(fieldTag + "\n")
 			htmlTable.WriteString("</td>\n</tr>\n")
 		} else {
 			htmlTable.WriteString(fmt.Sprintf("<tr>\n <th%s id=\"header_of_%s\">%s</th>\n <td%s>%v</td>\n</tr>\n", titleStr, field, header, tagAttrs, value))

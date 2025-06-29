@@ -23,7 +23,7 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, record map[strin
 		requiredLabel = ` <span class="required-label">(required)</span>`
 	}
 
-	labelTag := fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label>%s<br>\n", titleStr, field, field, fldCfg.Header, requiredLabel)
+	labelTag := fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label>%s", titleStr, field, field, fldCfg.Header, requiredLabel)
 
 	switch fldCfg.FieldEditor {
 	case "textarea":
