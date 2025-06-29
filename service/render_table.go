@@ -7,7 +7,6 @@ import (
 	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -15,13 +14,9 @@ import (
 func (s *Service) RenderTable(ctx *gin.Context) {
 	modelName := ctx.Param("modelName")
 
-	if s.Config.AccessCheckFunc(ctx, modelName, "", "read") != true {
-		ctx.String(http.StatusForbidden, "Access Denied")
-		return
-	}
-
-	mConfig := s.loadModelConfig(ctx, modelName, nil)
-	if mConfig == nil {
+	action := "read"
+	permit, mConfig := s.checkAccessAndLoadModelConfig(ctx, modelName, action)
+	if !permit {
 		return
 	}
 
