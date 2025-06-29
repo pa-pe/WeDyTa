@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type ModelConfig struct {
+type ConfigOfModel struct {
 	ModelName         string
 	PageTitle         string                            `json:"pageTitle"`
 	DbTable           string                            `json:"dbTable"`
@@ -27,13 +27,13 @@ type ModelConfig struct {
 	Links             map[string]LinkConfig             `json:"links"`
 	Parent            map[string]string                 `json:"parent"`
 	DbTablePrimaryKey string
-	ParentConfig      *ModelConfig
+	ParentConfig      *ConfigOfModel
 	FieldConfig       map[string]FieldParams
 	AdditionalScripts string
 }
 
 type CachedModelConfig struct {
-	Config  *ModelConfig
+	Config  *ConfigOfModel
 	ModTime time.Time
 }
 

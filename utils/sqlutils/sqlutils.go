@@ -314,7 +314,7 @@ func ExtractFieldTypeLength(fieldType string) int {
 //	return columnTypes, nil
 //}
 
-func GetTotalRecords(db *gorm.DB, config *model.ModelConfig) (int64, error) {
+func GetTotalRecords(db *gorm.DB, config *model.ConfigOfModel) (int64, error) {
 	var totalRecords int64
 	if err := db.Table(config.DbTable).Where(config.SqlWhere).Count(&totalRecords).Error; err != nil {
 		return 0, err

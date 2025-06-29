@@ -21,7 +21,7 @@ func takeFieldValueFromRecord(field string, record map[string]interface{}) inter
 	return value
 }
 
-func (s *Service) renderRecordValue(mConfig *model.ModelConfig, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
+func (s *Service) renderRecordValue(mConfig *model.ConfigOfModel, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
 	value := takeFieldValueFromRecord(field, record)
 
 	var pkValue string

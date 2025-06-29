@@ -15,7 +15,7 @@ import (
 
 var summernoteInitTags = "<link href=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.css\" rel=\"stylesheet\">\n<script src=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.js\"></script>\n<script src=\"/wedyta/static/js/wedyta_init_summernote.js\"></script>\n"
 
-func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ModelConfig {
+func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ConfigOfModel {
 	configPath := s.Config.ConfigDir + "/" + modelName + ".json"
 
 	stat, err := os.Stat(configPath)
@@ -35,7 +35,7 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 		return nil
 	}
 
-	var mConfig model.ModelConfig
+	var mConfig model.ConfigOfModel
 	if err := json.Unmarshal(data, &mConfig); err != nil {
 		//return nil, fmt.Errorf("failed to parse mConfig JSON: %w", err)
 		s.SomethingWentWrong(ctx, fmt.Sprintf("Failed to parse mConfig JSON of modelName: %s, err: %v", modelName, err))
@@ -86,7 +86,7 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 	return &mConfig
 }
 
-func (s *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
+func (s *Service) loadModelConfigDefaults(mConfig *model.ConfigOfModel) {
 	if mConfig.PageTitle == "" {
 		mConfig.PageTitle = mConfig.ModelName
 	}
@@ -106,7 +106,7 @@ func (s *Service) loadModelConfigDefaults(mConfig *model.ModelConfig) {
 	//for _, field := range append(mConfig.AddableFields, mConfig.EditableFields...) {
 }
 
-func (s *Service) fillFieldConfig(mConfig *model.ModelConfig) {
+func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 	if mConfig.FieldConfig == nil {
 		mConfig.FieldConfig = make(map[string]model.FieldParams)
 	}

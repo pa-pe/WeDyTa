@@ -2,7 +2,7 @@ package service
 
 import "github.com/pa-pe/wedyta/model"
 
-func (s *Service) breadcrumbBuilder(config *model.ModelConfig, recID string) string {
+func (s *Service) breadcrumbBuilder(config *model.ConfigOfModel, recID string) string {
 	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '` + s.Config.BreadcrumbsDivider + `';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="` + s.Config.BreadcrumbsRootUrl + `">` + s.Config.BreadcrumbsRootName + `</a></li>` + "\n"

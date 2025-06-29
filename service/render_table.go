@@ -62,7 +62,7 @@ func (s *Service) RenderTable(ctx *gin.Context) {
 	}
 }
 
-func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model.ModelConfig) (string, error) {
+func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model.ConfigOfModel) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTable(): mConfig == nil")
 	}

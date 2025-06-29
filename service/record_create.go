@@ -76,7 +76,7 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) string {
+func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) string {
 	if mConfig == nil || len(mConfig.AddableFields) == 0 {
 		return ""
 	}

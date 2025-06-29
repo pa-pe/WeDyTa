@@ -75,7 +75,7 @@ func (s *Service) RenderTableRecord(ctx *gin.Context) {
 	}
 }
 
-func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ModelConfig, recID int64, isUpdateMode bool) (string, error) {
+func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.ConfigOfModel, recID int64, isUpdateMode bool) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTableRecord(): mConfig == nil")
 	}
