@@ -22,31 +22,27 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
-	if s.Config.AccessCheckFunc(ctx, modelName, "", "create") != true {
-		ctx.String(http.StatusForbidden, "Forbidden RenderTable: "+modelName)
-		return
-	}
-
-	config := s.loadModelConfig(ctx, modelName, payload)
-	if config == nil {
+	action := "create"
+	permit, mConfig := s.checkAccessAndLoadModelConfig(ctx, modelName, action)
+	if !permit {
 		return
 	}
 
 	insertData := make(map[string]interface{})
-	for _, field := range config.AddableFields {
+	for _, field := range mConfig.AddableFields {
 		if value, exists := payload[field]; exists {
 			insertData[utils.CamelToSnake(field)] = value
 		}
 	}
 
-	if localConnectionField, exists := config.Parent["localConnectionField"]; exists {
-		if queryVariableValue, exists := config.Parent["queryVariableValue"]; exists {
+	if localConnectionField, exists := mConfig.Parent["localConnectionField"]; exists {
+		if queryVariableValue, exists := mConfig.Parent["queryVariableValue"]; exists {
 			insertData[localConnectionField] = queryVariableValue
 		}
 	}
 
 	// check RequiredFields
-	for _, requiredField := range config.RequiredFields {
+	for _, requiredField := range mConfig.RequiredFields {
 		if value, exists := payload[requiredField]; !exists || value == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' is required", requiredField)})
 			return
@@ -54,7 +50,7 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	}
 
 	// check NoZeroValueFields
-	for _, noZeroField := range config.NoZeroValueFields {
+	for _, noZeroField := range mConfig.NoZeroValueFields {
 		if value, exists := payload[noZeroField]; exists {
 			if number, ok := value.(float64); ok && number == 0 {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' cannot be zero", noZeroField)})
@@ -68,7 +64,7 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
-	if err := s.DB.Table(config.DbTable).Create(insertData).Error; err != nil {
+	if err := s.DB.Table(mConfig.DbTable).Create(insertData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
