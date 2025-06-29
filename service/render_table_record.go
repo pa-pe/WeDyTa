@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/model"
 	"log"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -28,13 +27,8 @@ func (s *Service) RenderTableRecord(ctx *gin.Context) {
 		s.SomethingWentWrong(ctx, "Can't ParseInt action="+action)
 	}
 
-	if s.Config.AccessCheckFunc(ctx, modelName, "", action) != true {
-		ctx.String(http.StatusForbidden, "Access Denied")
-		return
-	}
-
-	mConfig := s.loadModelConfig(ctx, modelName, nil)
-	if mConfig == nil {
+	permit, mConfig := s.checkAccessAndLoadModelConfig(ctx, modelName, action)
+	if !permit {
 		return
 	}
 
