@@ -99,11 +99,8 @@ func (s *Service) loadModelConfigDefaults(mConfig *model.ConfigOfModel) {
 	if err != nil {
 		log.Printf("WeDyTa: can't determine primary key for table %s: %v", mConfig.DbTable, err)
 	}
-	//if len(mConfig.AddableFields) > 0 || len(mConfig.EditableFields) > 0 {
-	//	// хотя бы один массив НЕ пуст
-	//}
 
-	//for _, field := range append(mConfig.AddableFields, mConfig.EditableFields...) {
+	mConfig.HeaderTags = `<link rel="stylesheet" href="/wedyta/static/css/wedyta.css">` + "\n"
 }
 
 func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {

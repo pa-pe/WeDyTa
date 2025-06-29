@@ -29,6 +29,7 @@ type ConfigOfModel struct {
 	DbTablePrimaryKey string
 	ParentConfig      *ConfigOfModel
 	FieldConfig       map[string]FieldParams
+	HeaderTags        string
 	AdditionalScripts string
 }
 
