@@ -119,42 +119,17 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ModelConfig) st
 			continue
 		}
 
-		label := fldCfg.Header
+		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, nil, "")
 
-		requiredAttr := ""
-		requiredLabel := ""
-		if fldCfg.IsRequired {
-			requiredAttr = " required"
-			requiredLabel = ` <span class="required-label">(required)</span>`
-		}
-
-		formBuilder.WriteString(fmt.Sprintf(`<div class="mb-3">
-        <label for="%s" class="form-label">%s</label>%s`, field, label, requiredLabel))
-
-		switch fldCfg.FieldEditor {
-		case "textarea":
-			formBuilder.WriteString(fmt.Sprintf(`<textarea class="form-control" id="%s" name="%s"%s></textarea>`, field, field, requiredAttr))
-		case "input":
-			formBuilder.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"\"%s>", field, field, requiredAttr))
-		case "select":
-			htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, "", fldCfg.IsRequired)
-			if err != nil {
-				formBuilder.WriteString("oops")
-			} else {
-				formBuilder.WriteString(htmlSelect)
-			}
-		case "summernote":
-			formBuilder.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s></textarea>", field, field, requiredAttr))
-		default:
-			formBuilder.WriteString("oops, something went wrong")
-		}
-
-		formBuilder.WriteString(`</div>`)
+		formBuilder.WriteString("<div class=\"mb-3\">\n")
+		formBuilder.WriteString(labelTag + "\n")
+		formBuilder.WriteString(fieldTag + "\n")
+		formBuilder.WriteString("</div>\n")
 
 		countFields++
 	}
 
-	// skip return add form if no addable fields by AccessCheckFunc
+	// skip return add form if no addable fields by AccessCheckFunc or no PermitDisplayInInsertMode
 	if countFields == 0 {
 		return ""
 	}
