@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/model"
 	"github.com/pa-pe/wedyta/utils"
 	"github.com/pa-pe/wedyta/utils/sqlutils"
@@ -21,7 +22,7 @@ func takeFieldValueFromRecord(field string, record map[string]interface{}) inter
 	return value
 }
 
-func (s *Service) renderRecordValue(mConfig *model.ConfigOfModel, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
+func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfModel, field string, record map[string]interface{}, cache *model.RenderTableCache) (interface{}, string) {
 	value := takeFieldValueFromRecord(field, record)
 
 	var pkValue string
@@ -59,6 +60,14 @@ func (s *Service) renderRecordValue(mConfig *model.ConfigOfModel, field string, 
 		if columnDataFunc == "stdRecordControls" {
 			value = "<a href=\"/wedyta/" + mConfig.ModelName + "/" + pkValue + "/update\"><i class=\"bi-pen record-control-update\"></i></a>"
 			//value = value.(string) + " <i class=\"bi-trash record-control-delete\"></i>"
+		} else if columnDataFunc == "dynamicColumnDataFunc" {
+			if s.Config.DynamicColumnDataFunc != nil {
+				value = s.Config.DynamicColumnDataFunc(ctx, s.DB, mConfig.DbTable, field, record)
+			} else {
+				value = "!WedytaConfig.DynamicColumnDataFunc not set"
+			}
+		} else {
+			value = "!Unknown columnDataFunc: " + columnDataFunc
 		}
 	}
 
