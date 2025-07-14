@@ -129,7 +129,7 @@ td { width: auto !important; }
 		var cache model.RenderTableCache
 		cache.RelatedData = make(map[string]string)
 
-		value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
+		value, tagAttrs := s.renderRecordValue(ctx, mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
 			labelTag, fieldTag := s.renderFormInputTag(&fldCfg, record, value)
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">\n")

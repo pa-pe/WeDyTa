@@ -108,7 +108,7 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 				continue
 			}
 
-			value, tagAttrs := s.renderRecordValue(mConfig, field, record, &cache)
+			value, tagAttrs := s.renderRecordValue(ctx, mConfig, field, record, &cache)
 			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", tagAttrs, value))
 		}
 		htmlTable.WriteString("</tr>\n")
