@@ -8,7 +8,7 @@ type ConfigOfModel struct {
 	ModelName         string
 	PageTitle         string                            `json:"pageTitle"`
 	DbTable           string                            `json:"dbTable"`
-	SqlWhere          string                            `json:"sqlWhere"`
+	SqlWhereOriginal  string                            `json:"sqlWhere"`
 	Fields            []string                          `json:"fields"`
 	OrderBy           string                            `json:"orderBy"`
 	Headers           map[string]string                 `json:"headers"`
@@ -31,6 +31,7 @@ type ConfigOfModel struct {
 	FieldConfig       map[string]FieldParams
 	HeaderTags        string
 	AdditionalScripts string
+	SqlWhere          string
 }
 
 type CachedModelConfig struct {

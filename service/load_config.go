@@ -26,6 +26,8 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 
 	cached, found := s.modelCache[modelName]
 	if found && cached.ModTime.Equal(stat.ModTime()) {
+		// resolving SqlWhere variables before return
+		cached.Config.SqlWhere = s.resolveVariables(ctx, modelName, cached.Config.SqlWhereOriginal)
 		return cached.Config
 	}
 
@@ -76,7 +78,7 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 		return nil
 	}
 
-	mConfig.SqlWhere = s.resolveVariables(ctx, modelName, mConfig.SqlWhere)
+	mConfig.SqlWhere = s.resolveVariables(ctx, modelName, mConfig.SqlWhereOriginal)
 
 	s.modelCache[modelName] = model.CachedModelConfig{
 		Config:  &mConfig,
