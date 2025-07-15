@@ -26,6 +26,7 @@ type ConfigOfModel struct {
 	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links             map[string]LinkConfig             `json:"links"`
 	Parent            map[string]string                 `json:"parent"`
+	HasParent         bool
 	DbTablePrimaryKey string
 	ParentConfig      *ConfigOfModel
 	FieldConfig       map[string]FieldParams
