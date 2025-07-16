@@ -26,8 +26,7 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 
 	cached, found := s.modelCache[modelName]
 	if found && cached.ModTime.Equal(stat.ModTime()) {
-		// resolving SqlWhere variables before return
-		cached.Config.SqlWhere = s.resolveVariables(ctx, modelName, cached.Config.SqlWhereOriginal)
+		s.refreshVariableDependentParams(ctx, cached.Config, payload)
 		return cached.Config
 	}
 
@@ -55,7 +54,28 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 			s.SomethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
 			return nil
 		}
+		mConfig.HasParent = true
+	}
 
+	if s.Config.VariableResolver == nil && strings.Contains(mConfig.SqlWhere, "{{") {
+		s.SomethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
+		return nil
+	}
+
+	s.modelCache[modelName] = model.CachedModelConfig{
+		Config:  &mConfig,
+		ModTime: stat.ModTime(),
+	}
+
+	s.refreshVariableDependentParams(ctx, &mConfig, payload)
+
+	return &mConfig
+}
+
+func (s *Service) refreshVariableDependentParams(ctx *gin.Context, mConfig *model.ConfigOfModel, payload map[string]interface{}) {
+	mConfig.SqlWhere = s.resolveVariables(ctx, mConfig.ModelName, mConfig.SqlWhereOriginal)
+
+	if mConfig.HasParent {
 		if queryVariableName, exist := mConfig.Parent["queryVariableName"]; exist {
 			//fmt.Println("queryVariableName=" + queryVariableName)
 			if payload != nil {
@@ -66,26 +86,10 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 				if queryVariableValue, exist := ctx.GetQuery(queryVariableName); exist {
 					//fmt.Println("queryVariableValue=" + queryVariableValue)
 					mConfig.Parent["queryVariableValue"] = queryVariableValue
-					//			} else {
-					//				mConfig.Parent["queryVariableValue"] = ""
 				}
 			}
 		}
 	}
-
-	if s.Config.VariableResolver == nil && strings.Contains(mConfig.SqlWhere, "{{") {
-		s.SomethingWentWrong(ctx, fmt.Sprintf("Trying to use variables without wedytaConfig.VariableResolver modelName=%s", modelName))
-		return nil
-	}
-
-	mConfig.SqlWhere = s.resolveVariables(ctx, modelName, mConfig.SqlWhereOriginal)
-
-	s.modelCache[modelName] = model.CachedModelConfig{
-		Config:  &mConfig,
-		ModTime: stat.ModTime(),
-	}
-
-	return &mConfig
 }
 
 func (s *Service) loadModelConfigDefaults(mConfig *model.ConfigOfModel) {
