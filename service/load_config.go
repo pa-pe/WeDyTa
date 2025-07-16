@@ -88,6 +88,8 @@ func (s *Service) refreshVariableDependentParams(ctx *gin.Context, mConfig *mode
 					mConfig.Parent["queryVariableValue"] = queryVariableValue
 				}
 			}
+
+			mConfig.AdditionalUrlParams = "?" + queryVariableName + "=" + mConfig.Parent["queryVariableValue"]
 		}
 	}
 }

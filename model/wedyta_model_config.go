@@ -5,35 +5,36 @@ import (
 )
 
 type ConfigOfModel struct {
-	ModelName         string
-	PageTitle         string                            `json:"pageTitle"`
-	DbTable           string                            `json:"dbTable"`
-	SqlWhereOriginal  string                            `json:"sqlWhere"`
-	Fields            []string                          `json:"fields"`
-	OrderBy           string                            `json:"orderBy"`
-	Headers           map[string]string                 `json:"headers"`
-	Titles            map[string]string                 `json:"titles"`
-	Classes           map[string]string                 `json:"classes"`
-	DisplayMode       map[string]string                 `json:"displayMode"`
-	DateTimeFields    map[string]string                 `json:"dateTimeFields"`
-	RelatedData       map[string]string                 `json:"relatedData"`
-	AddableFields     []string                          `json:"addableFields"`
-	RequiredFields    []string                          `json:"requiredFields"`
-	EditableFields    []string                          `json:"editableFields"`
-	FieldEditor       map[string]string                 `json:"fieldsEditor"`
-	NoZeroValueFields []string                          `json:"noZeroValueFields"`
-	ColumnDataFunc    map[string]string                 `json:"columnDataFunc"`
-	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
-	Links             map[string]LinkConfig             `json:"links"`
-	Parent            map[string]string                 `json:"parent"`
-	Breadcrumb        BreadcrumbConfig
-	HasParent         bool
-	DbTablePrimaryKey string
-	ParentConfig      *ConfigOfModel
-	FieldConfig       map[string]FieldParams
-	HeaderTags        string
-	AdditionalScripts string
-	SqlWhere          string
+	ModelName           string
+	PageTitle           string                            `json:"pageTitle"`
+	DbTable             string                            `json:"dbTable"`
+	SqlWhereOriginal    string                            `json:"sqlWhere"`
+	Fields              []string                          `json:"fields"`
+	OrderBy             string                            `json:"orderBy"`
+	Headers             map[string]string                 `json:"headers"`
+	Titles              map[string]string                 `json:"titles"`
+	Classes             map[string]string                 `json:"classes"`
+	DisplayMode         map[string]string                 `json:"displayMode"`
+	DateTimeFields      map[string]string                 `json:"dateTimeFields"`
+	RelatedData         map[string]string                 `json:"relatedData"`
+	AddableFields       []string                          `json:"addableFields"`
+	RequiredFields      []string                          `json:"requiredFields"`
+	EditableFields      []string                          `json:"editableFields"`
+	FieldEditor         map[string]string                 `json:"fieldsEditor"`
+	NoZeroValueFields   []string                          `json:"noZeroValueFields"`
+	ColumnDataFunc      map[string]string                 `json:"columnDataFunc"`
+	CountRelatedData    map[string]CountRelatedDataConfig `json:"countRelatedData"`
+	Links               map[string]LinkConfig             `json:"links"`
+	Parent              map[string]string                 `json:"parent"`
+	Breadcrumb          BreadcrumbConfig
+	HasParent           bool
+	DbTablePrimaryKey   string
+	ParentConfig        *ConfigOfModel
+	FieldConfig         map[string]FieldParams
+	HeaderTags          string
+	AdditionalScripts   string
+	SqlWhere            string
+	AdditionalUrlParams string
 }
 
 type CachedModelConfig struct {

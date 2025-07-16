@@ -58,7 +58,8 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 	columnDataFunc, exists := mConfig.ColumnDataFunc[field]
 	if exists {
 		if columnDataFunc == "stdRecordControls" {
-			value = "<a href=\"/wedyta/" + mConfig.ModelName + "/" + pkValue + "/update\"><i class=\"bi-pen record-control-update\"></i></a>"
+			url := "/wedyta/" + mConfig.ModelName + "/" + pkValue + "/update" + mConfig.AdditionalUrlParams
+			value = "<a href=\"" + url + "\"><i class=\"bi-pen record-control-update\"></i></a>"
 			//value = value.(string) + " <i class=\"bi-trash record-control-delete\"></i>"
 		} else if columnDataFunc == "dynamicColumnDataFunc" {
 			if s.Config.DynamicColumnDataFunc != nil {
