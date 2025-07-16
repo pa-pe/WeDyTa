@@ -1,17 +1,35 @@
 package service
 
-import "github.com/pa-pe/wedyta/model"
+import (
+	"fmt"
+	"github.com/pa-pe/wedyta/model"
+	"log"
+)
 
-func (s *Service) breadcrumbBuilder(config *model.ConfigOfModel, recID string) string {
+func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string) string {
 	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '` + s.Config.BreadcrumbsDivider + `';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="` + s.Config.BreadcrumbsRootUrl + `">` + s.Config.BreadcrumbsRootName + `</a></li>` + "\n"
 
-	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
-		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentModelName + `">` + config.ParentConfig.PageTitle + `</a></li>` + "\n"
+	if mConfig.HasParent {
+		parentMC := mConfig.ParentConfig
+		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `">` + mConfig.ParentConfig.PageTitle + `</a></li>` + "\n"
+		if mConfig.Parent["queryVariableName"] != "" && mConfig.Parent["queryVariableValue"] != "" {
+			value := ""
+			if mConfig.ParentConfig.Breadcrumb.LabelField != "" {
+				var err error
+				value, err = s.takeLabelFieldValue(parentMC.DbTable, parentMC.DbTablePrimaryKey, mConfig.Parent["queryVariableValue"], mConfig.ParentConfig.Breadcrumb.LabelField)
+				if err != nil {
+					log.Printf("Error taking label field: %s", err.Error())
+				}
+			} else {
+				value = "#" + mConfig.Parent["queryVariableValue"]
+			}
+			breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `/` + mConfig.Parent["queryVariableValue"] + `/">` + value + `</a></li>` + "\n"
+		}
 	}
 
-	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page"><a href="/wedyta/` + config.ModelName + `">` + config.PageTitle + `</a>`
+	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page"><a href="/wedyta/` + mConfig.ModelName + `">` + mConfig.PageTitle + `</a>`
 	if recID != "" {
 		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> #` + recID
 	}
@@ -20,4 +38,17 @@ func (s *Service) breadcrumbBuilder(config *model.ConfigOfModel, recID string) s
 	breadcrumbStr += `</nav>` + "\n"
 
 	return breadcrumbStr
+}
+
+func (s *Service) takeLabelFieldValue(table, pkField, pkValue, labelField string) (string, error) {
+	var record map[string]interface{}
+	if err := s.DB.
+		Model(&record).
+		Table(table).
+		Where(fmt.Sprintf("%s = %s", pkField, pkValue)).
+		Take(&record).Error; err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s", record[labelField]), nil
 }
