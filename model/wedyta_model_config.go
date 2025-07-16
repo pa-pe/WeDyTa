@@ -26,6 +26,7 @@ type ConfigOfModel struct {
 	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links             map[string]LinkConfig             `json:"links"`
 	Parent            map[string]string                 `json:"parent"`
+	Breadcrumb        BreadcrumbConfig
 	HasParent         bool
 	DbTablePrimaryKey string
 	ParentConfig      *ConfigOfModel
@@ -77,4 +78,8 @@ type RelatedDataConfig struct {
 	TableName           string
 	FieldName           string
 	PrimaryKeyFieldName string
+}
+
+type BreadcrumbConfig struct {
+	LabelField string
 }
