@@ -82,18 +82,6 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 <link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
 ` + mConfig.AdditionalScripts)
 
-	formBuilder.WriteString(`
-	<div class="accordion" id="addFormAccordion">
-        <div class="accordion-item">
-            <` + s.Config.HeadersTag + ` class="accordion-header" id="addFormHeading">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#addFormCollapse" aria-expanded="false" aria-controls="addFormCollapse">
-                    <i class="bi-plus-square"></i> &nbsp; Add New Record
-                </button>
-            </` + s.Config.HeadersTag + `>
-            <div id="addFormCollapse" class="accordion-collapse collapse" aria-labelledby="addFormHeading" data-bs-parent="#addFormAccordion">
-                <div class="accordion-body" style="background: rgba(128,128,128,0.1);">
-`)
-
 	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
         <input type="hidden" name="modelName" value="%s">`+"\n", mConfig.ModelName))
 
@@ -131,6 +119,5 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 	}
 
 	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Add</button>` + "\n</form>\n")
-	formBuilder.WriteString("</div>\n</div>\n</div>\n")
 	return formBuilder.String()
 }

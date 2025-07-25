@@ -70,7 +70,7 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 
 	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, ""))
-	htmlTable.WriteString(s.RenderAddForm(ctx, mConfig))
+	htmlTable.WriteString(s.wrapBsAccordion(s.RenderAddForm(ctx, mConfig), "", "Add New Record"))
 
 	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
