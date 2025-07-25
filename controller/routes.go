@@ -26,6 +26,7 @@ func (c *Controller) RegisterRoutes(r *gin.Engine) {
 	//wedytaGroup.StaticFS("/static", http.FS(embeddedFiles))
 	wedytaGroup.StaticFS("/static", http.FS(staticFiles))
 	wedytaGroup.GET("/:modelName", s.RenderTable)
+	wedytaGroup.GET("/:modelName/create", s.RenderTableRecordCreate)
 	wedytaGroup.GET("/:modelName/:recID", s.RenderTableRecord)
 	wedytaGroup.GET("/:modelName/:recID/:action", c.routeModelRecordAction)
 	wedytaGroup.POST("/add", s.HandleTableCreateRecord)
