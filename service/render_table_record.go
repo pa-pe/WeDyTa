@@ -51,6 +51,11 @@ func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.Config
 		return "", err
 	}
 
+	action := "read record"
+	if isUpdateMode {
+		action = "update"
+	}
+
 	var record map[string]interface{}
 	if err := s.DB.
 		Model(&record).
@@ -82,7 +87,7 @@ td { width: auto !important; }
 	htmlTable.WriteString("<div class=\"col\">\n")
 
 	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
-	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, fmt.Sprintf("%d", recID)))
+	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, fmt.Sprintf("%d", recID), action))
 
 	var pkValue string
 	value, exists := record[mConfig.DbTablePrimaryKey]

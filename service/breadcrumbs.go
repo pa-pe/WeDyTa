@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string) string {
+func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string, action string) string {
 	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '` + s.Config.BreadcrumbsDivider + `';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="` + s.Config.BreadcrumbsRootUrl + `">` + s.Config.BreadcrumbsRootName + `</a></li>` + "\n"
@@ -30,9 +30,19 @@ func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string) 
 	}
 
 	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page"><a href="/wedyta/` + mConfig.ModelName + `">` + mConfig.PageTitle + `</a>`
-	if recID != "" {
+
+	switch action {
+	case "read records":
+	case "read record":
+		//if recID != "" {
 		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> #` + recID
+		//}
+	case "create":
+		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> ` + "create record"
+	case "update":
+		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> ` + "update record"
 	}
+
 	breadcrumbStr += ` &nbsp; <i class="bi-arrow-repeat" style="color: grey; cursor: pointer;" onClick="window.location.href = window.location.pathname + window.location.search + window.location.hash;"></i>` + `</li>` + "\n"
 	breadcrumbStr += `  </ol>` + "\n"
 	breadcrumbStr += `</nav>` + "\n"
