@@ -17,7 +17,7 @@ func (s *Service) RenderTableRecordCreate(ctx *gin.Context) {
 		return
 	}
 
-	htmlTable, err := s.RenderModelTableRecordCreate(ctx, mConfig)
+	htmlTable, err := s.RenderModelTableRecordCreate(ctx, mConfig, action)
 	if err != nil {
 		s.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
@@ -26,13 +26,21 @@ func (s *Service) RenderTableRecordCreate(ctx *gin.Context) {
 	s.RenderPage(ctx, mConfig, htmlTable)
 }
 
-func (s *Service) RenderModelTableRecordCreate(ctx *gin.Context, mConfig *model.ConfigOfModel) (string, error) {
+func (s *Service) RenderModelTableRecordCreate(ctx *gin.Context, mConfig *model.ConfigOfModel, action string) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTableRecord(): mConfig == nil")
 	}
 
 	var htmlTable strings.Builder
+
+	htmlTable.WriteString("<div class=\"col\">\n")
+
+	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
+	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, "", action))
+
 	htmlTable.WriteString(s.RenderAddForm(ctx, mConfig))
+
+	htmlTable.WriteString("</div>\n")
 
 	return htmlTable.String(), nil
 }
