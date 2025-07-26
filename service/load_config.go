@@ -76,23 +76,40 @@ func (s *Service) refreshVariableDependentParams(ctx *gin.Context, mConfig *mode
 	mConfig.SqlWhere = s.resolveVariables(ctx, mConfig.ModelName, mConfig.SqlWhereOriginal)
 
 	if mConfig.HasParent {
-		if mConfig.Parent.QueryVariableName != "" {
-			queryVariableName := mConfig.Parent.QueryVariableName
-			//fmt.Println("queryVariableName=" + queryVariableName)
-			if payload != nil {
-				if queryVariableValue, exists := payload[queryVariableName].(string); exists {
-					mConfig.Parent.QueryVariableValue = queryVariableValue
-				}
-			} else {
-				if queryVariableValue, exist := ctx.GetQuery(queryVariableName); exist {
-					//fmt.Println("queryVariableValue=" + queryVariableValue)
-					mConfig.Parent.QueryVariableValue = queryVariableValue
-				}
-			}
-
-			mConfig.AdditionalUrlParams = "?" + queryVariableName + "=" + mConfig.Parent.QueryVariableValue
-		}
+		mConfig.AdditionalUrlParams = s.renderAdditionalUrlParams(ctx, mConfig, payload)
 	}
+}
+
+func (s *Service) renderAdditionalUrlParams(ctx *gin.Context, mConfig *model.ConfigOfModel, payload map[string]interface{}) string {
+	additionalUrlParams := "?"
+
+	if mConfig.HasParent {
+		additionalUrlParams = s.renderAdditionalUrlParams(ctx, mConfig.ParentConfig, payload)
+	}
+
+	if mConfig.Parent.QueryVariableName != "" {
+		queryVariableName := mConfig.Parent.QueryVariableName
+		//fmt.Println("queryVariableName=" + queryVariableName)
+		if payload != nil {
+			if queryVariableValue, exists := payload[queryVariableName].(string); exists {
+				mConfig.Parent.QueryVariableValue = queryVariableValue
+			}
+		} else {
+			if queryVariableValue, exist := ctx.GetQuery(queryVariableName); exist {
+				//fmt.Println("queryVariableValue=" + queryVariableValue)
+				mConfig.Parent.QueryVariableValue = queryVariableValue
+			}
+		}
+
+		if additionalUrlParams != "?" {
+			additionalUrlParams += "&"
+		}
+
+		additionalUrlParams += queryVariableName + "=" + mConfig.Parent.QueryVariableValue
+	}
+
+	//fmt.Printf("m=%s, additionalUrlParams='%s'\n", mConfig.ModelName, additionalUrlParams)
+	return additionalUrlParams
 }
 
 func (s *Service) loadModelConfigDefaults(mConfig *model.ConfigOfModel) {
