@@ -31,12 +31,12 @@ func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string, 
 
 	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page"><a href="/wedyta/` + mConfig.ModelName + `">` + mConfig.PageTitle + `</a>`
 
+	if recID != "" {
+		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> #` + recID
+	}
 	switch action {
 	case "read records":
 	case "read record":
-		//if recID != "" {
-		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> #` + recID
-		//}
 	case "create":
 		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> ` + "create record"
 	case "update":
