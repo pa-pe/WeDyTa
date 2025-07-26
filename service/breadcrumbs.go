@@ -41,18 +41,18 @@ func (s *Service) renderParentBreadcrumb(mConfig *model.ConfigOfModel) string {
 
 	parentMC := mConfig.ParentConfig
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `">` + mConfig.ParentConfig.PageTitle + `</a></li>` + "\n"
-	if mConfig.Parent["queryVariableName"] != "" && mConfig.Parent["queryVariableValue"] != "" {
+	if mConfig.Parent.QueryVariableName != "" && mConfig.Parent.QueryVariableValue != "" {
 		value := ""
 		if mConfig.ParentConfig.Breadcrumb.LabelField != "" {
 			var err error
-			value, err = s.takeLabelFieldValue(parentMC.DbTable, parentMC.DbTablePrimaryKey, mConfig.Parent["queryVariableValue"], mConfig.ParentConfig.Breadcrumb.LabelField)
+			value, err = s.takeLabelFieldValue(parentMC.DbTable, parentMC.DbTablePrimaryKey, mConfig.Parent.QueryVariableValue, mConfig.ParentConfig.Breadcrumb.LabelField)
 			if err != nil {
 				log.Printf("Error taking label field: %s", err.Error())
 			}
 		} else {
-			value = "#" + mConfig.Parent["queryVariableValue"]
+			value = "#" + mConfig.Parent.QueryVariableValue
 		}
-		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `/` + mConfig.Parent["queryVariableValue"] + parentMC.AdditionalUrlParams + `">` + value + `</a></li>` + "\n"
+		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `/` + mConfig.Parent.QueryVariableValue + parentMC.AdditionalUrlParams + `">` + value + `</a></li>` + "\n"
 	}
 
 	if parentMC.HasParent {

@@ -47,11 +47,11 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 	s.loadModelConfigDefaults(&mConfig)
 	s.fillFieldConfig(&mConfig)
 
-	if parentModelName, parentExists := mConfig.Parent["modelName"]; parentExists {
+	if mConfig.Parent.ModelName != "" {
 		//fmt.Println(parentModelName)
-		mConfig.ParentConfig = s.loadModelConfig(ctx, parentModelName, payload)
+		mConfig.ParentConfig = s.loadModelConfig(ctx, mConfig.Parent.ModelName, payload)
 		if mConfig.ParentConfig == nil {
-			s.SomethingWentWrong(ctx, "Can`t load ParentConfig: "+parentModelName)
+			s.SomethingWentWrong(ctx, "Can`t load ParentConfig: "+mConfig.Parent.ModelName)
 			return nil
 		}
 		mConfig.HasParent = true
@@ -76,20 +76,21 @@ func (s *Service) refreshVariableDependentParams(ctx *gin.Context, mConfig *mode
 	mConfig.SqlWhere = s.resolveVariables(ctx, mConfig.ModelName, mConfig.SqlWhereOriginal)
 
 	if mConfig.HasParent {
-		if queryVariableName, exist := mConfig.Parent["queryVariableName"]; exist {
+		if mConfig.Parent.QueryVariableName != "" {
+			queryVariableName := mConfig.Parent.QueryVariableName
 			//fmt.Println("queryVariableName=" + queryVariableName)
 			if payload != nil {
-				if value, exists := payload[queryVariableName].(string); exists {
-					mConfig.Parent["queryVariableValue"] = value
+				if queryVariableValue, exists := payload[queryVariableName].(string); exists {
+					mConfig.Parent.QueryVariableValue = queryVariableValue
 				}
 			} else {
 				if queryVariableValue, exist := ctx.GetQuery(queryVariableName); exist {
 					//fmt.Println("queryVariableValue=" + queryVariableValue)
-					mConfig.Parent["queryVariableValue"] = queryVariableValue
+					mConfig.Parent.QueryVariableValue = queryVariableValue
 				}
 			}
 
-			mConfig.AdditionalUrlParams = "?" + queryVariableName + "=" + mConfig.Parent["queryVariableValue"]
+			mConfig.AdditionalUrlParams = "?" + queryVariableName + "=" + mConfig.Parent.QueryVariableValue
 		}
 	}
 }

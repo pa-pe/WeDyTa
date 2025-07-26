@@ -35,10 +35,8 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		}
 	}
 
-	if localConnectionField, exists := mConfig.Parent["localConnectionField"]; exists {
-		if queryVariableValue, exists := mConfig.Parent["queryVariableValue"]; exists {
-			insertData[localConnectionField] = queryVariableValue
-		}
+	if mConfig.Parent.LocalConnectionField != "" && mConfig.Parent.QueryVariableValue != "" {
+		insertData[mConfig.Parent.LocalConnectionField] = mConfig.Parent.QueryVariableValue
 	}
 
 	// check RequiredFields
@@ -87,10 +85,8 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
         <input type="hidden" name="modelName" value="%s">`+"\n", mConfig.ModelName))
 
-	if queryVariableName, exists := mConfig.Parent["queryVariableName"]; exists {
-		if queryVariableValue, exists := mConfig.Parent["queryVariableValue"]; exists {
-			formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", queryVariableName, queryVariableValue))
-		}
+	if mConfig.Parent.QueryVariableName != "" && mConfig.Parent.QueryVariableValue != "" {
+		formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", mConfig.Parent.QueryVariableName, mConfig.Parent.QueryVariableValue))
 	}
 
 	countFields := 0
