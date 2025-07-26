@@ -15,7 +15,7 @@ func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string, 
 		breadcrumbStr += s.renderParentBreadcrumb(mConfig)
 	}
 
-	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page"><a href="/wedyta/` + mConfig.ModelName + `">` + mConfig.PageTitle + `</a>`
+	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page"><a href="/wedyta/` + mConfig.ModelName + mConfig.AdditionalUrlParams + `">` + mConfig.PageTitle + `</a>`
 
 	if recID != "" {
 		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> #` + recID
@@ -40,7 +40,7 @@ func (s *Service) renderParentBreadcrumb(mConfig *model.ConfigOfModel) string {
 	breadcrumbStr := ""
 
 	parentMC := mConfig.ParentConfig
-	breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `">` + mConfig.ParentConfig.PageTitle + `</a></li>` + "\n"
+	breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + parentMC.AdditionalUrlParams + `">` + mConfig.ParentConfig.PageTitle + `</a></li>` + "\n"
 	if mConfig.Parent.QueryVariableName != "" && mConfig.Parent.QueryVariableValue != "" {
 		value := ""
 		if mConfig.ParentConfig.Breadcrumb.LabelField != "" {
