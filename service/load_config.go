@@ -186,7 +186,7 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 			if strings.Contains(param.DisplayMode, "update") {
 				param.PermitDisplayInUpdateMode = true
 			}
-			if strings.Contains(param.DisplayMode, "insert") {
+			if strings.Contains(param.DisplayMode, "create") || strings.Contains(param.DisplayMode, "insert") {
 				param.PermitDisplayInInsertMode = true
 			}
 		}
