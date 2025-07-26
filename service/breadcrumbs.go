@@ -43,7 +43,7 @@ func (s *Service) breadcrumbBuilder(mConfig *model.ConfigOfModel, recID string, 
 		breadcrumbStr += `</li>` + "\n" + `    <li class="breadcrumb-item active" aria-current="page"> ` + "update record"
 	}
 
-	breadcrumbStr += ` &nbsp; <i class="bi-arrow-repeat" style="color: grey; cursor: pointer;" onClick="window.location.href = window.location.pathname + window.location.search + window.location.hash;"></i>` + `</li>` + "\n"
+	breadcrumbStr += ` &nbsp; <i class="bi-arrow-repeat" style="color: grey; cursor: pointer;" onClick="window.location.href = window.location.pathname + window.location.search + window.location.hash;" title="Refresh page"></i>` + `</li>` + "\n"
 	breadcrumbStr += `  </ol>` + "\n"
 	breadcrumbStr += `</nav>` + "\n"
 
