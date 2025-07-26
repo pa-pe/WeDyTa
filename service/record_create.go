@@ -3,10 +3,8 @@ package service
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pa-pe/wedyta/model"
 	"github.com/pa-pe/wedyta/utils"
 	"net/http"
-	"strings"
 )
 
 func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
@@ -68,54 +66,4 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"success": true})
-}
-
-func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) string {
-	if mConfig == nil || len(mConfig.AddableFields) == 0 {
-		return ""
-	}
-
-	var formBuilder strings.Builder
-	formBuilder.WriteString(`
-` + s.Config.JQueryScriptTag + `
-<script src="/wedyta/static/js/wedyta_create.js"></script>
-<link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
-` + mConfig.AdditionalScripts)
-
-	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
-        <input type="hidden" name="modelName" value="%s">`+"\n", mConfig.ModelName))
-
-	if mConfig.Parent.QueryVariableName != "" && mConfig.Parent.QueryVariableValue != "" {
-		formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", mConfig.Parent.QueryVariableName, mConfig.Parent.QueryVariableValue))
-	}
-
-	countFields := 0
-	for _, field := range mConfig.AddableFields {
-		fldCfg := mConfig.FieldConfig[field]
-
-		if !fldCfg.PermitDisplayInInsertMode {
-			continue
-		}
-
-		if s.Config.AccessCheckFunc(ctx, mConfig.ModelName, field, "create") != true {
-			continue
-		}
-
-		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, nil, "")
-
-		formBuilder.WriteString("<div class=\"mb-3\">\n")
-		formBuilder.WriteString(labelTag + "\n")
-		formBuilder.WriteString(fieldTag + "\n")
-		formBuilder.WriteString("</div>\n")
-
-		countFields++
-	}
-
-	// skip return add form if no addable fields by AccessCheckFunc or no PermitDisplayInInsertMode
-	if countFields == 0 {
-		return ""
-	}
-
-	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Create</button>` + "\n</form>\n")
-	return formBuilder.String()
 }

@@ -17,7 +17,7 @@ func (s *Service) RenderTableRecordCreate(ctx *gin.Context) {
 		return
 	}
 
-	htmlTable, err := s.RenderModelTableRecordCreate(ctx, mConfig, action)
+	htmlTable, err := s.renderModelTableRecordCreate(ctx, mConfig, action)
 	if err != nil {
 		s.SomethingWentWrong(ctx, fmt.Sprintf("RenderModelTableRecord error: %v", err))
 		return
@@ -26,7 +26,7 @@ func (s *Service) RenderTableRecordCreate(ctx *gin.Context) {
 	s.RenderPage(ctx, mConfig, htmlTable)
 }
 
-func (s *Service) RenderModelTableRecordCreate(ctx *gin.Context, mConfig *model.ConfigOfModel, action string) (string, error) {
+func (s *Service) renderModelTableRecordCreate(ctx *gin.Context, mConfig *model.ConfigOfModel, action string) (string, error) {
 	if mConfig == nil {
 		log.Fatalf("Wedyta: RenderModelTableRecord(): mConfig == nil")
 	}
@@ -38,9 +38,59 @@ func (s *Service) RenderModelTableRecordCreate(ctx *gin.Context, mConfig *model.
 	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, "", action))
 
-	htmlTable.WriteString(s.RenderAddForm(ctx, mConfig))
+	htmlTable.WriteString(s.renderAddForm(ctx, mConfig))
 
 	htmlTable.WriteString("</div>\n")
 
 	return htmlTable.String(), nil
+}
+
+func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) string {
+	if mConfig == nil || len(mConfig.AddableFields) == 0 {
+		return ""
+	}
+
+	var formBuilder strings.Builder
+	formBuilder.WriteString(`
+` + s.Config.JQueryScriptTag + `
+<script src="/wedyta/static/js/wedyta_create.js"></script>
+<link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
+` + mConfig.AdditionalScripts)
+
+	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
+        <input type="hidden" name="modelName" value="%s">`+"\n", mConfig.ModelName))
+
+	if mConfig.Parent.QueryVariableName != "" && mConfig.Parent.QueryVariableValue != "" {
+		formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", mConfig.Parent.QueryVariableName, mConfig.Parent.QueryVariableValue))
+	}
+
+	countFields := 0
+	for _, field := range mConfig.AddableFields {
+		fldCfg := mConfig.FieldConfig[field]
+
+		if !fldCfg.PermitDisplayInInsertMode {
+			continue
+		}
+
+		if s.Config.AccessCheckFunc(ctx, mConfig.ModelName, field, "create") != true {
+			continue
+		}
+
+		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, nil, "")
+
+		formBuilder.WriteString("<div class=\"mb-3\">\n")
+		formBuilder.WriteString(labelTag + "\n")
+		formBuilder.WriteString(fieldTag + "\n")
+		formBuilder.WriteString("</div>\n")
+
+		countFields++
+	}
+
+	// skip return add form if no addable fields by AccessCheckFunc or no PermitDisplayInInsertMode
+	if countFields == 0 {
+		return ""
+	}
+
+	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Create</button>` + "\n</form>\n")
+	return formBuilder.String()
 }
