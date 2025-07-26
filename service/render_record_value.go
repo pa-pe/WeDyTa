@@ -118,7 +118,7 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 			placeholder := fmt.Sprintf("$%s$", key)
 			link = strings.ReplaceAll(link, placeholder, fmt.Sprintf("%v", val))
 		}
-		value = fmt.Sprintf("<a href='%s%s'>%v</a>", link, mConfig.ParentConfig.AdditionalUrlParams, value)
+		value = fmt.Sprintf("<a href='%s%s'>%v</a>", link, mConfig.AdditionalUrlParams, value)
 	}
 
 	if dateTimeFieldConfig, dateTimeFieldExists := mConfig.DateTimeFields[field]; dateTimeFieldExists {
