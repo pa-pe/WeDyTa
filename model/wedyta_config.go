@@ -62,4 +62,9 @@ type WedytaConfig struct {
 
 	// JQueryScriptTag default: <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	JQueryScriptTag string
+
+	// SummernoteInitTags default:
+	// <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.css" rel="stylesheet">
+	// <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.js"></script>
+	SummernoteInitTags string
 }

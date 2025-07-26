@@ -13,8 +13,6 @@ import (
 	"strings"
 )
 
-var summernoteInitTags = "<link href=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.css\" rel=\"stylesheet\">\n<script src=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.js\"></script>\n<script src=\"/wedyta/static/js/wedyta_init_summernote.js\"></script>\n"
-
 func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ConfigOfModel {
 	configPath := s.Config.ConfigDir + "/" + modelName + ".json"
 
@@ -209,8 +207,8 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 		mConfig.FieldConfig[field] = param
 
 		if editor == "summernote" {
-			if !strings.Contains(mConfig.AdditionalScripts, summernoteInitTags) {
-				mConfig.AdditionalScripts += summernoteInitTags
+			if !strings.Contains(mConfig.AdditionalScripts, s.Config.SummernoteInitTags) {
+				mConfig.AdditionalScripts += s.Config.SummernoteInitTags
 			}
 			mConfig.AdditionalScripts += summernoteConfig(mConfig.ModelName, field)
 		}
