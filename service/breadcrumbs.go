@@ -52,7 +52,7 @@ func (s *Service) renderParentBreadcrumb(mConfig *model.ConfigOfModel) string {
 		} else {
 			value = "#" + mConfig.Parent["queryVariableValue"]
 		}
-		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `/` + mConfig.Parent["queryVariableValue"] + `/">` + value + `</a></li>` + "\n"
+		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/wedyta/` + parentMC.ModelName + `/` + mConfig.Parent["queryVariableValue"] + `">` + value + `</a></li>` + "\n"
 	}
 
 	if parentMC.HasParent {
