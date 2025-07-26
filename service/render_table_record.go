@@ -70,7 +70,7 @@ func (s *Service) RenderModelTableRecord(ctx *gin.Context, mConfig *model.Config
 
 	if len(mConfig.EditableFields) > 0 {
 		htmlTable.WriteString(`
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+` + s.Config.JQueryScriptTag + `
 <script src="/wedyta/static/js/wedyta_update.js"></script>
 ` + mConfig.AdditionalScripts)
 	}
@@ -148,7 +148,7 @@ td { width: auto !important; }
 	htmlTable.WriteString("</tbody>\n</table>\n")
 
 	if isUpdateMode {
-		htmlTable.WriteString("<button type=\"button\" class=\"btn btn-primary\" id=\"saveButton\">Save</button>\n")
+		htmlTable.WriteString("<button type=\"button\" class=\"btn btn-primary\" id=\"saveButton\">Update</button>\n")
 		htmlTable.WriteString("</form>\n")
 	}
 

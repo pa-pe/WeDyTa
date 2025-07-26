@@ -51,6 +51,10 @@ func NewService(db *gorm.DB, wedytaConfig *model.WedytaConfig) *Service {
 		db = db.Debug()
 	}
 
+	if wedytaConfig.JQueryScriptTag == "" {
+		wedytaConfig.JQueryScriptTag = "<script src=\"https://code.jquery.com/jquery-3.7.1.min.js\"></script>"
+	}
+
 	return &Service{
 		DB:                db,
 		Config:            wedytaConfig,

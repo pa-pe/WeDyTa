@@ -55,8 +55,11 @@ type WedytaConfig struct {
 	AfterUpdate  func(context *gin.Context, db *gorm.DB, table string, id int64, field string, valueBeforeUpdate string, valueAfterUpdate string)
 	AfterDelete  func(context *gin.Context, db *gorm.DB, table string, id int64)
 
-	// DynamicColumnDataResolver allows dynamic generation of additional table cells
+	// DynamicColumnDataFunc allows dynamic generation of additional table cells
 	// by invoking a user-defined function. This enables adding custom columns to
 	// each row based on record data, user context, or other dynamic logic.
 	DynamicColumnDataFunc func(context *gin.Context, db *gorm.DB, table string, field string, record map[string]interface{}) string
+
+	// JQueryScriptTag default: <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	JQueryScriptTag string
 }

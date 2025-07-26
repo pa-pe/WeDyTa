@@ -78,7 +78,9 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 	}
 
 	var formBuilder strings.Builder
-	formBuilder.WriteString(`<script src="/wedyta/static/js/wedyta_create.js"></script>
+	formBuilder.WriteString(`
+` + s.Config.JQueryScriptTag + `
+<script src="/wedyta/static/js/wedyta_create.js"></script>
 <link rel="stylesheet" href="/wedyta/static/css/wedyta_create.css">
 ` + mConfig.AdditionalScripts)
 
@@ -118,6 +120,6 @@ func (s *Service) RenderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 		return ""
 	}
 
-	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Add</button>` + "\n</form>\n")
+	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Create</button>` + "\n</form>\n")
 	return formBuilder.String()
 }
