@@ -31,7 +31,13 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, record map[strin
 	case "input":
 		htmlTag.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\"%s>", field, field, value, requiredAttr))
 	case "select":
-		value_ := takeFieldValueFromRecord(field, record)
+		var value_ interface{}
+		if record == nil {
+			value_ = value
+		} else {
+			value_ = takeFieldValueFromRecord(field, record)
+		}
+
 		htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_, fldCfg.IsRequired)
 		if err != nil {
 			htmlTag.WriteString("oops")

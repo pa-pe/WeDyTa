@@ -76,7 +76,13 @@ func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 			continue
 		}
 
-		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, nil, "")
+		value := ""
+		if val, exist := ctx.GetQuery(fldCfg.Field); exist {
+			value = val
+		}
+		fmt.Printf("%s='%s'\n", fldCfg.Field, value)
+
+		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, nil, value)
 
 		formBuilder.WriteString("<div class=\"mb-3\">\n")
 		formBuilder.WriteString(labelTag + "\n")
