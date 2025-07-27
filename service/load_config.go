@@ -309,7 +309,8 @@ func summernoteConfig(modelName, field string) string {
 $(document).ready(function() {
 	initSummernote("` + field + `", "` + modelName + `");
 });
-</script>`
+</script>
+`
 
 	return config
 }

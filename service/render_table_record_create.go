@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/model"
 	"log"
+	"slices"
 	"strings"
 )
 
@@ -60,8 +61,12 @@ func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
         <input type="hidden" name="modelName" value="%s">`+"\n", mConfig.ModelName))
 
+	// adding a linking field to the parent table
 	if mConfig.Parent.QueryVariableName != "" && mConfig.Parent.QueryVariableValue != "" {
-		formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", mConfig.Parent.QueryVariableName, mConfig.Parent.QueryVariableValue))
+		// adding input type="hidden" just if input type="text" not present
+		if slices.Contains(mConfig.AddableFields, mConfig.Parent.QueryVariableName) == false {
+			formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", mConfig.Parent.QueryVariableName, mConfig.Parent.QueryVariableValue))
+		}
 	}
 
 	countFields := 0
