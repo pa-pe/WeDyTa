@@ -29,7 +29,7 @@ func (c *Controller) RegisterRoutes(r *gin.Engine) {
 	wedytaGroup.GET("/:modelName/create", s.RenderTableRecordCreate)
 	wedytaGroup.GET("/:modelName/:recID", s.RenderTableRecord)
 	wedytaGroup.GET("/:modelName/:recID/:action", c.routeModelRecordAction)
-	wedytaGroup.POST("/add", s.HandleTableCreateRecord)
+	wedytaGroup.POST("/create", s.HandleTableCreateRecord)
 	wedytaGroup.POST("/update", s.Update)
 	wedytaGroup.POST("/upload/check", c.handleUploadCheck)
 	wedytaGroup.POST("/upload/image", c.HandleImageUpload)
