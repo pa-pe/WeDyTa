@@ -60,6 +60,8 @@ func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload ma
 		return nil
 	}
 
+	//identifyInsertModeHiddenFields(&mConfig)
+
 	s.modelCache[modelName] = model.CachedModelConfig{
 		Config:  &mConfig,
 		ModTime: stat.ModTime(),
@@ -311,3 +313,33 @@ $(document).ready(function() {
 
 	return config
 }
+
+//// determine the connecting fields of the parent tables
+//// used to hide the parent record id field on the create page
+//func identifyInsertModeHiddenFields(mConfig *model.ConfigOfModel) {
+//	if len(mConfig.AddableFields) == 0 || mConfig.HasParent == false {
+//		return
+//	}
+//
+//	for _, field := range mConfig.Fields {
+//		if chkConnectionFieldInParent(mConfig, field) == true {
+//			mConfig.InsertModeHiddenFields = append(mConfig.InsertModeHiddenFields, field)
+//
+//			param := mConfig.FieldConfig[field]
+//			param.InsertHiddenMode = true
+//			mConfig.FieldConfig[field] = param
+//		}
+//	}
+//}
+//
+//func chkConnectionFieldInParent(mConfig *model.ConfigOfModel, field string) bool {
+//	if mConfig.Parent.LocalConnectionField == field {
+//		return true
+//	}
+//
+//	if mConfig.ParentConfig.HasParent {
+//		return chkConnectionFieldInParent(mConfig.ParentConfig, field)
+//	}
+//
+//	return false
+//}

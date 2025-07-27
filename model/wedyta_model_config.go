@@ -35,6 +35,7 @@ type ConfigOfModel struct {
 	AdditionalScripts   string
 	SqlWhere            string
 	AdditionalUrlParams string
+	//InsertModeHiddenFields []string
 }
 
 type CachedModelConfig struct {
@@ -67,7 +68,8 @@ type FieldParams struct {
 	PermitDisplayInRecordMode bool
 	PermitDisplayInUpdateMode bool
 	PermitDisplayInInsertMode bool
-	RelatedData               *RelatedDataConfig
+	//InsertHiddenMode          bool
+	RelatedData *RelatedDataConfig
 }
 
 type RenderTableCache struct {
