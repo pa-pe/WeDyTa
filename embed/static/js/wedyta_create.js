@@ -27,8 +27,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     if (data.success) {
                         alert("Record created successfully");
-                        // location.reload();
-                        window.location.href = window.location.pathname + window.location.search + window.location.hash;
+                        if (data.successfullyCreatedDestination === "refresh_page") {
+                            // location.reload();
+                            window.location.href = window.location.pathname + window.location.search + window.location.hash;
+                        } else if (data.successfullyCreatedDestination.startsWith("/")) {
+                            window.location.href = data.successfullyCreatedDestination;
+                        }
                     } else {
                         alert("Failed to create record: " + (data.error || "Unknown error"));
                     }

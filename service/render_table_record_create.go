@@ -39,14 +39,14 @@ func (s *Service) renderModelTableRecordCreate(ctx *gin.Context, mConfig *model.
 	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, "", action))
 
-	htmlTable.WriteString(s.renderAddForm(ctx, mConfig))
+	htmlTable.WriteString(s.renderAddForm(ctx, mConfig, "show_record"))
 
 	htmlTable.WriteString("</div>\n")
 
 	return htmlTable.String(), nil
 }
 
-func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) string {
+func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel, successfullyCreatedDestination string) string {
 	if mConfig == nil || len(mConfig.AddableFields) == 0 {
 		return ""
 	}
@@ -68,6 +68,8 @@ func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel) 
 			formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", mConfig.Parent.QueryVariableName, mConfig.Parent.QueryVariableValue))
 		}
 	}
+
+	formBuilder.WriteString(`<input type="hidden" name="successfullyCreatedDestination" value="` + successfullyCreatedDestination + `">` + "\n")
 
 	countFields := 0
 	for _, field := range mConfig.AddableFields {

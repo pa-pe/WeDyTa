@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/utils"
 	"net/http"
+	"strconv"
 )
 
 func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
@@ -68,10 +69,22 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		}
 	}
 
+	var insertedID int64
 	if err := s.DB.Table(mConfig.DbTable).Create(insertData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
+	} else {
+		s.DB.Raw("SELECT LAST_INSERT_ID()").Scan(&insertedID)
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true})
+	successfullyCreatedDestination := ""
+
+	if value, exists := payload["successfullyCreatedDestination"]; exists {
+		successfullyCreatedDestination = value.(string)
+		if successfullyCreatedDestination == "show_record" {
+			successfullyCreatedDestination = "/wedyta/" + mConfig.ModelName + "/" + strconv.FormatInt(insertedID, 10)
+		}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"success": true, "successfullyCreatedDestination": successfullyCreatedDestination})
 }
