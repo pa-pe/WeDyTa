@@ -60,6 +60,14 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
+	if s.Config.BeforeCreate != nil {
+		permitCreate, msg := s.Config.BeforeCreate(ctx, s.DB, mConfig.DbTable, insertData)
+		if !permitCreate {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": msg})
+			return
+		}
+	}
+
 	if err := s.DB.Table(mConfig.DbTable).Create(insertData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return

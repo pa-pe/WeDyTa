@@ -10,26 +10,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 formObject[key] = value;
             });
 
-            fetch("/wedyta/add", {
+            fetch("/wedyta/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(formObject)
             })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("HTTP error " + response.status);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
+                // .then(response => {
+                //     if (!response.ok) {
+                //         throw new Error("HTTP error " + response.status);
+                //     }
+                //     return response.json();
+                // })
                 .then(data => {
                     if (data.success) {
-                        alert("Record added successfully");
+                        alert("Record created successfully");
                         // location.reload();
                         window.location.href = window.location.pathname + window.location.search + window.location.hash;
                     } else {
-                        alert("Failed to add record: " + (data.error || "Unknown error"));
+                        alert("Failed to create record: " + (data.error || "Unknown error"));
                     }
                 })
                 .catch(error => {

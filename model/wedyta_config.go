@@ -48,7 +48,7 @@ type WedytaConfig struct {
 	// VariableResolver the function to which the variable name will be passed to get the value
 	VariableResolver func(context *gin.Context, modelName string, variableName string) string
 
-	BeforeCreate func(context *gin.Context, db *gorm.DB, table string, id int64)
+	BeforeCreate func(context *gin.Context, db *gorm.DB, table string, insertData map[string]interface{}) (bool, string)
 	BeforeUpdate func(context *gin.Context, db *gorm.DB, table string, id int64, field string)
 	BeforeDelete func(context *gin.Context, db *gorm.DB, table string, id int64)
 	AfterCreate  func(context *gin.Context, db *gorm.DB, table string, id int64)
