@@ -115,7 +115,7 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 	}
 	htmlTable.WriteString("</tbody>\n</table>")
 
-	curPageUrl := mConfig.ModelName
+	curPageUrl := mConfig.ModelName + mConfig.AdditionalUrlParams
 	htmlTable.WriteString(s.buildPagination(totalRecords, s.Config.PaginationRecordsPerPage, pageNum, curPageUrl))
 
 	return htmlTable.String(), nil
@@ -138,6 +138,11 @@ func (s *Service) buildPagination(totalRecords int64, pageSize int, pageNum int,
 		end = pageCount
 	}
 
+	urlConnectionSign := "?"
+	if strings.ContainsRune(url, '?') {
+		urlConnectionSign = "&"
+	}
+
 	pagination := "<nav aria-label=\"Page navigation\">\n<ul class=\"pagination justify-content-center\">\n"
 
 	// ← First page
@@ -152,7 +157,7 @@ func (s *Service) buildPagination(totalRecords int64, pageSize int, pageNum int,
 	for i := start; i <= end; i++ {
 		url_ := url
 		if i > 1 {
-			url_ += fmt.Sprintf("?page=%d", i)
+			url_ += fmt.Sprintf("%spage=%d", urlConnectionSign, i)
 		}
 		active := ""
 		if i == pageNum {
@@ -166,7 +171,7 @@ func (s *Service) buildPagination(totalRecords int64, pageSize int, pageNum int,
 		if end < pageCount-1 {
 			pagination += "<li class=\"page-item disabled\"><span class=\"page-link\">...</span></li>\n"
 		}
-		url_ := url + fmt.Sprintf("?page=%d", pageCount)
+		url_ := url + fmt.Sprintf("%spage=%d", urlConnectionSign, pageCount)
 		pagination += fmt.Sprintf("<li class=\"page-item\"><a class=\"page-link\" href=\"%s\">%d</a></li>\n", url_, pageCount)
 	}
 
