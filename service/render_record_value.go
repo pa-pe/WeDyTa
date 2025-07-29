@@ -90,8 +90,10 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 					Scan(&relatedValue)
 
 				if err != nil {
+					log.Printf("WeDyTa: failed to load related value from %s %s=%v err: %v", fldCfg.RelatedData.TableName, rdCfg.PrimaryKeyFieldName, value, err)
+					relatedValue = fmt.Sprintf("#%v", value)
+					value = relatedValue
 					cache.RelatedData[cacheKey] = relatedValue
-					log.Printf("WeDyTa: failed to load related value from %s: %v", fldCfg.RelatedData.TableName, err)
 				} else {
 					value = relatedValue
 					cache.RelatedData[cacheKey] = relatedValue
