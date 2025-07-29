@@ -203,16 +203,24 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 	columnTypes, _ := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
 
 	// FieldEditor
-	for field, editor := range mConfig.FieldEditor {
+	for field, editorCfg := range mConfig.FieldEditor {
 		param := mConfig.FieldConfig[field]
-		param.FieldEditor = editor
+		if typRaw, ok := editorCfg["type"]; ok {
+			if typStr, ok := typRaw.(string); ok {
+				param.FieldEditor = typStr
+			} else {
+				log.Fatalf("WeDyTa: fieldsEditor.type must be string for field %s", field)
+			}
+		} else {
+			log.Fatalf("WeDyTa: no type for field %s in fieldsEditor", field)
+		}
 		mConfig.FieldConfig[field] = param
 
-		if editor == "summernote" {
+		if param.FieldEditor == "summernote" {
 			if !strings.Contains(mConfig.AdditionalScripts, s.Config.SummernoteInitTags) {
 				mConfig.AdditionalScripts += s.Config.SummernoteInitTags
 			}
-			mConfig.AdditionalScripts += summernoteConfig(mConfig.ModelName, field)
+			mConfig.AdditionalScripts += summernoteConfig(mConfig.ModelName, field, editorCfg)
 		}
 	}
 
@@ -303,16 +311,19 @@ func (s *Service) resolveVariables(ctx *gin.Context, modelName string, str strin
 	return str
 }
 
-func summernoteConfig(modelName, field string) string {
-	config := `
+func summernoteConfig(modelName, field string, editorConfig map[string]interface{}) string {
+	delete(editorConfig, "type")
+
+	jsConfigBytes, _ := json.Marshal(editorConfig)
+	jsConfig := string(jsConfigBytes)
+
+	return `
 <script>
 $(document).ready(function() {
-	initSummernote("` + field + `", "` + modelName + `");
+	initSummernote("` + field + `", "` + modelName + `", ` + jsConfig + `);
 });
 </script>
 `
-
-	return config
 }
 
 //// determine the connecting fields of the parent tables
