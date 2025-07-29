@@ -1,9 +1,8 @@
-function initSummernote(field, modelName) {
-    $('#' + field).summernote({
+function initSummernote(field, modelName, options) {
+    const defaultOptions = {
         height: 300,
         callbacks: {
             onImageUpload: async function (files) {
-
                 const recordId = getRecordIdForModel(modelName);
                 const check = await isImageUploadAllowed(field, modelName, recordId);
 
@@ -18,7 +17,6 @@ function initSummernote(field, modelName) {
                 data.append("model", modelName);
                 data.append("field", field);
                 data.append("record_id", recordId);
-
 
                 fetch('/wedyta/upload/image', {
                     method: 'POST',
@@ -50,10 +48,13 @@ function initSummernote(field, modelName) {
                         console.error("Upload failed:", error);
                         showBootstrapPopup(error.message, "danger");
                     });
-
             }
         }
-    });
+    };
+
+    const mergedOptions = {...defaultOptions, ...options};
+
+    $('#' + field).summernote(mergedOptions);
 }
 
 function getRecordIdForModel(modelName) {
