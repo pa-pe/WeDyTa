@@ -3,40 +3,70 @@ const iconSuccess = '<i class="bi-check-circle" style="color: green;"></i>';
 const iconLoading = '<i class="bi-arrow-repeat" style="color: blue;"></i>';
 const iconFail = '<i class="bi-x-circle" style="color: red;"></i>';
 
-function send_update_data(data) {
-    let query_result = -1;
-
-    // fetch('/update_model', {
-    fetch('/wedyta/update', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                query_result = 1;
-//            statusContainer.animShow(iconSuccess);
-//alert("update ok");
-//                 location.reload();
-                window.location.href = window.location.pathname + window.location.search + window.location.hash;
-            } else {
-                query_result = 0;
-//            statusContainer.animShow(iconFail);
-                alert('Failed to update: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            query_result = 0;
-//        statusContainer.animShow(iconFail);
-            alert('Error: ' + error);
+async function send_update_data(data, pageRefresh = true) {
+    try {
+        const response = await fetch('/wedyta/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
         });
 
-    let success_update = query_result > 0;
-    return success_update;
+        const result = await response.json();
+
+        if (result.success) {
+            if (pageRefresh) {
+                window.location.href = window.location.pathname + window.location.search + window.location.hash;
+            }
+            return true;
+        } else {
+            alert('Failed to update: ' + (result.error || 'Unknown error'));
+            return false;
+        }
+    } catch (error) {
+        alert('Error: ' + error);
+        return false;
+    }
 }
+
+// function send_update_data(data, pageRefresh = true) {
+//     let query_result = -1;
+//
+//     // fetch('/update_model', {
+//     fetch('/wedyta/update', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(data),
+//     })
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.success) {
+//                 query_result = 1;
+// //            statusContainer.animShow(iconSuccess);
+// //alert("update ok");
+//                 if (pageRefresh) {
+// //                 location.reload();
+//                     window.location.href = window.location.pathname + window.location.search + window.location.hash;
+//                 }
+//             } else {
+//                 query_result = 0;
+// //            statusContainer.animShow(iconFail);
+//                 alert('Failed to update: ' + (data.error || 'Unknown error'));
+//             }
+//         })
+//         .catch(error => {
+//             query_result = 0;
+// //        statusContainer.animShow(iconFail);
+//             alert('Error: ' + error);
+//         });
+//
+//     let success_update = query_result > 0;
+//     console.log("success_update=" + success_update);
+//     return success_update;
+// }
 
 function showQueuedAnim(name, tagCont, doFunc) {
     if ($(tagCont).hasClass("change_animation_progress")) {
@@ -139,17 +169,20 @@ function createModal(title, contentHtml) {
 
     function bindSaveButton() {
         const form = $('#editForm');
-        $('#saveButton').on('click', function () {
+        $('#saveButton').on('click', async function () {
             // var formData = form.serialize();
             // console.log(formData);
             let formDataJson = serializeFormToJson(form);
             // console.log(formDataJson);
-            let success_update = send_update_data(formDataJson);
+
+            let success_update = await send_update_data(formDataJson);
             if (success_update) {
-                let newContent = $('#editTextarea').val();
+                let newContent = form.find('textarea, input[type="text"]').first().val(); // take first textarea or text input
                 currentTd.text(newContent);
             }
             $('#editModal').modal('hide');
+
+            currentTd = null;
         });
     }
 
@@ -245,18 +278,18 @@ function applySwitchChangeConfirmed($checkbox, $row, isChecked) {
         [fieldName]: isChecked ? 1 : 0
     };
 
-    const success = send_update_data(data);
-
-    if (success) {
-        if (isChecked) {
-            $row.removeClass('disabled');
+    send_update_data(data, false).then(success => {
+        if (success) {
+            if (isChecked) {
+                $row.removeClass('disabled');
+            } else {
+                $row.addClass('disabled');
+            }
         } else {
-            $row.addClass('disabled');
+            // rollback checkbox state on failure
+            $checkbox.prop('checked', !isChecked);
         }
-    } else {
-        // Optional: rollback checkbox state on failure
-        $checkbox.prop('checked', !isChecked);
-    }
+    });
 
     $pendingCheckbox = null;
 }
@@ -276,7 +309,7 @@ $(document).ready(function () {
     }
 
     $('.editable-textarea, .editable-input').on('dblclick', function () {
-        const currentTd = $(this);
+        currentTd = $(this);
         const modelName = currentTd.closest('table').attr("model");
         const fieldName = currentTd.attr('fieldName');
         let title = $("#header_of_" + fieldName).text();
