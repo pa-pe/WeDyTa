@@ -96,10 +96,8 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 
 	for _, record := range records {
 		trClass := ""
-		if recordIsDisabled, exists := record["is_disabled"]; exists {
-			if fmt.Sprint(recordIsDisabled) == "1" {
-				trClass = ` class="disabled"`
-			}
+		if !extractIsActive(record) {
+			trClass = ` class="disabled"`
 		}
 
 		htmlTable.WriteString("<tr" + trClass + ">\n")
