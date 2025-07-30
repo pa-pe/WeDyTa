@@ -97,22 +97,15 @@ function animShowStatusContainer(statusContainer, iconTag, animTime, tagCont, dr
     });
 }
 
+var currentTd;
 
-$(document).ready(function () {
-    // for /wedyta/model/id/update
-    if ($('#editForm').length === 1) {
-        bindSaveButton();
-    }
+// Function to create the modal if it doesn't exist
+function createModal(title, contentHtml) {
+    // remove previous model if it exist
+    $('#editModal').remove();
 
-    var currentTd;
-
-    // Function to create the modal if it doesn't exist
-    function createModal(title, contentHtml) {
-        // remove parent model if exist
-        $('#editModal').remove();
-
-        // adding new one
-        $('body').append(`
+    // Create new modal
+    $('body').append(`
         <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -131,24 +124,6 @@ $(document).ready(function () {
             </div>
         </div>
     `);
-
-        // Bind events after creating the modal
-        bindModalEvents();
-    }
-
-    function buildRecordUpdateForm(modelName, recordId, fieldName, content, isTextarea) {
-        return `
-        <form id="editForm">
-        <input type="hidden" name="modelName" value="${modelName}">
-        <input type="hidden" name="id" value="${recordId}">
-        ${isTextarea
-            ? `<textarea class="form-control" name="${fieldName}" rows="5">${content}</textarea>`
-            : `<input class="form-control" type="text" name="${fieldName}" value="${content}">`
-        }
-        </form>
-    `;
-    }
-
 
     // Function to bind events to the modal
     function bindModalEvents() {
@@ -178,6 +153,128 @@ $(document).ready(function () {
         });
     }
 
+    // Bind events after creating the modal
+    bindModalEvents();
+}
+
+function urlParamsToHiddenInputs() {
+    const params = new URLSearchParams(window.location.search);
+    let inputs = '';
+
+    for (const [key, value] of params.entries()) {
+        inputs += `<input type="hidden" name="${key}" value="${value}">\n`;
+    }
+
+    return inputs;
+}
+
+function buildRecordUpdateForm(modelName, recordId, fieldName, content, isTextarea) {
+    const hiddenInputs = urlParamsToHiddenInputs();
+
+    return `
+        <form id="editForm">
+        <input type="hidden" name="modelName" value="${modelName}">
+        <input type="hidden" name="id" value="${recordId}">
+        ${hiddenInputs}
+    ${isTextarea
+        ? `<textarea class="form-control" name="${fieldName}" rows="5">${content}</textarea>`
+        : `<input class="form-control" type="text" name="${fieldName}" value="${content}">`
+    }
+        </form>
+`;
+}
+
+function showConfirmModal(title, messageHtml, onConfirm) {
+    // Remove previous modal if it exists
+    $('#editModal').remove();
+
+    // Create new modal
+    $('body').append(`
+        <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">${messageHtml}</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary" id="confirmModalBtn">Подтвердить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+
+    $('#confirmModalBtn').on('click', function () {
+        modal.hide();
+        onConfirm(); // Call the provided confirmation handler
+    });
+}
+
+let $pendingCheckbox = null;
+
+function handleSwitchChange($checkbox) {
+    const checked = $checkbox.prop('checked');
+    const row = $checkbox.closest('tr');
+    $pendingCheckbox = $checkbox;
+
+    showConfirmModal(
+        'Confirm Change',
+        checked
+            ? 'Are you sure you want to <strong>enable</strong> this record?'
+            : 'Are you sure you want to <strong>disable</strong> this record?',
+        function () {
+            applySwitchChangeConfirmed($pendingCheckbox, row, checked);
+        }
+    );
+}
+
+function applySwitchChangeConfirmed($checkbox, $row, isChecked) {
+    const recId = $checkbox.attr('rec_id');
+    const modelName = $checkbox.closest('table').attr("model") || 'unknown_model';
+    const fieldName = $checkbox.closest('td').attr('fieldname');
+
+    const data = {
+        modelName: modelName,
+        id: recId,
+        [fieldName]: isChecked ? 1 : 0
+    };
+
+    const success = send_update_data(data);
+
+    if (success) {
+        if (isChecked) {
+            $row.removeClass('disabled');
+        } else {
+            $row.addClass('disabled');
+        }
+    } else {
+        // Optional: rollback checkbox state on failure
+        $checkbox.prop('checked', !isChecked);
+    }
+
+    $pendingCheckbox = null;
+}
+
+function restoreSwitchOnCancel() {
+    if ($pendingCheckbox) {
+        // Revert checkbox if modal was dismissed
+        $pendingCheckbox.prop('checked', !$pendingCheckbox.prop('checked'));
+        $pendingCheckbox = null;
+    }
+}
+
+$(document).ready(function () {
+    // for /wedyta/model/id/update
+    if ($('#editForm').length === 1) {
+        bindSaveButton();
+    }
+
     $('.editable-textarea, .editable-input').on('dblclick', function () {
         const currentTd = $(this);
         const modelName = currentTd.closest('table').attr("model");
@@ -204,6 +301,13 @@ $(document).ready(function () {
             $('#editForm').find(isTextarea ? 'textarea' : 'input[type="text"]').focus();
         });
     });
+
+    $(document).on('change', '.editable-bs5switch .form-check-input', function () {
+        handleSwitchChange($(this));
+    });
+
+    // On cancel - return the checkbox to its original state
+    $(document).on('hidden.bs.modal', '#editModal', restoreSwitchOnCancel);
 });
 
 function serializeFormToJson(form) {
