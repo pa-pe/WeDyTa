@@ -198,6 +198,18 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 		}
 
 		mConfig.FieldConfig[field] = param
+
+		if field == "is_active" {
+			if _, exist := mConfig.FieldEditor[field]; !exist {
+				if mConfig.FieldEditor == nil {
+					mConfig.FieldEditor = make(map[string]map[string]interface{})
+				}
+
+				mConfig.FieldEditor[field] = map[string]interface{}{
+					"type": "bs5switch",
+				}
+			}
+		}
 	}
 
 	columnTypes, _ := sqlutils.GetTableColumnTypes(s.DB, mConfig.DbTable)
