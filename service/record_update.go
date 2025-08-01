@@ -105,14 +105,19 @@ func (s *Service) Update(ctx *gin.Context) {
 			return
 		}
 
+		if field == "is_active" {
+			strVal := fmt.Sprint(val)
+			switch strings.ToLower(strVal) {
+			case "on", "1", "true":
+				val = 1
+			default:
+				val = 0
+			}
+			updateData[field] = val
+		}
+
 		if sqlutils.IsNumericColumnType(colType) {
 			//log.Printf("dbg isNumeric: %s", field)
-
-			//if cleaned, ok := sanitizeNumericField(val); ok {
-			//	updateData[field] = cleaned
-			//} else {
-			//	delete(updateData, field) // not a digit
-			//}
 
 			cleaned, ok := sqlutils.SanitizeNumericField(val)
 			if !ok {

@@ -128,16 +128,8 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 	}
 
 	if fldCfg.FieldEditor == "bs5switch" {
-		checked := ""
-		if fmt.Sprintf("%v", value) == "1" {
-			checked = " checked"
-		}
-
-		disabled := " disabled"
-		if fldCfg.IsEditable {
-			disabled = ""
-		}
-		value = fmt.Sprintf("<div class=\"form-check form-switch\"><input class=\"form-check-input\" type=\"checkbox\" role=\"switch\" rec_id=\"%s\" id=\"%s_%s\"%s%s></div>", pkValue, field, pkValue, checked, disabled)
+		_, fieldTag := s.renderFormInputTag(&fldCfg, mConfig, record, value)
+		value = fieldTag
 	}
 
 	return value, tagAttrs

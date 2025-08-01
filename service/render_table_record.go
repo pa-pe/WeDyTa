@@ -104,7 +104,11 @@ td { width: auto !important; }
 		htmlTable.WriteString("<input type=\"hidden\" name=\"id\" value=\"" + pkValue + "\">\n")
 	}
 
-	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "' record_id='" + pkValue + "'>\n<tbody>\n<tr>\n")
+	tblClass := "table-model-record"
+	if isUpdateMode {
+		tblClass += "-update"
+	}
+	htmlTable.WriteString("<table class='table table-striped mt-3 " + tblClass + "' model='" + mConfig.ModelName + "' record_id='" + pkValue + "'>\n<tbody>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
 		fldCfg := mConfig.FieldConfig[field]
@@ -136,7 +140,7 @@ td { width: auto !important; }
 
 		value, tagAttrs := s.renderRecordValue(ctx, mConfig, field, record, &cache)
 		if isUpdateMode && fldCfg.IsEditable {
-			labelTag, fieldTag := s.renderFormInputTag(&fldCfg, record, value)
+			labelTag, fieldTag := s.renderFormInputTag(&fldCfg, mConfig, record, value)
 			htmlTable.WriteString("<tr>\n <td" + tagAttrs + " colspan=\"2\">\n")
 			htmlTable.WriteString(labelTag + "<br>\n")
 			htmlTable.WriteString(fieldTag + "\n")

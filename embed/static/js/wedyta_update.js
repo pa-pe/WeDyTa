@@ -30,44 +30,6 @@ async function send_update_data(data, pageRefresh = true) {
     }
 }
 
-// function send_update_data(data, pageRefresh = true) {
-//     let query_result = -1;
-//
-//     // fetch('/update_model', {
-//     fetch('/wedyta/update', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(data),
-//     })
-//         .then(response => response.json())
-//         .then(data => {
-//             if (data.success) {
-//                 query_result = 1;
-// //            statusContainer.animShow(iconSuccess);
-// //alert("update ok");
-//                 if (pageRefresh) {
-// //                 location.reload();
-//                     window.location.href = window.location.pathname + window.location.search + window.location.hash;
-//                 }
-//             } else {
-//                 query_result = 0;
-// //            statusContainer.animShow(iconFail);
-//                 alert('Failed to update: ' + (data.error || 'Unknown error'));
-//             }
-//         })
-//         .catch(error => {
-//             query_result = 0;
-// //        statusContainer.animShow(iconFail);
-//             alert('Error: ' + error);
-//         });
-//
-//     let success_update = query_result > 0;
-//     console.log("success_update=" + success_update);
-//     return success_update;
-// }
-
 function showQueuedAnim(name, tagCont, doFunc) {
     if ($(tagCont).hasClass("change_animation_progress")) {
         setTimeout(showQueuedAnim, 100, name, tagCont, doFunc);
@@ -167,27 +129,27 @@ function createModal(title, contentHtml) {
         });
     }
 
-    function bindSaveButton() {
-        const form = $('#editForm');
-        $('#saveButton').on('click', async function () {
-            // var formData = form.serialize();
-            // console.log(formData);
-            let formDataJson = serializeFormToJson(form);
-            // console.log(formDataJson);
-
-            let success_update = await send_update_data(formDataJson);
-            if (success_update) {
-                let newContent = form.find('textarea, input[type="text"]').first().val(); // take first textarea or text input
-                currentTd.text(newContent);
-            }
-            $('#editModal').modal('hide');
-
-            currentTd = null;
-        });
-    }
-
     // Bind events after creating the modal
     bindModalEvents();
+}
+
+function bindSaveButton() {
+    const form = $('#editForm');
+    $('#saveButton').on('click', async function () {
+        // var formData = form.serialize();
+        // console.log(formData);
+        let formDataJson = serializeFormToJson(form);
+        // console.log(formDataJson);
+
+        let success_update = await send_update_data(formDataJson);
+        if (success_update) {
+            let newContent = form.find('textarea, input[type="text"]').first().val(); // take first textarea or text input
+            currentTd.text(newContent);
+        }
+        $('#editModal').modal('hide');
+
+        currentTd = null;
+    });
 }
 
 function urlParamsToHiddenInputs() {
@@ -335,7 +297,11 @@ $(document).ready(function () {
         });
     });
 
-    $(document).on('change', '.editable-bs5switch .form-check-input', function () {
+    $(document).on('change', '.table-model-record .editable-bs5switch .form-check-input', function () {
+        handleSwitchChange($(this));
+    });
+
+    $(document).on('change', '.table-model-records .editable-bs5switch .form-check-input', function () {
         handleSwitchChange($(this));
     });
 

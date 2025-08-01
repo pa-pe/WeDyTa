@@ -72,7 +72,7 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, "", "read records"))
 	htmlTable.WriteString(s.wrapBsAccordion(s.renderAddForm(ctx, mConfig, "refresh_page"), "", "Add New Record"))
 
-	htmlTable.WriteString("<table class='table table-striped mt-3' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
+	htmlTable.WriteString("<table class='table table-striped mt-3 table-model-records' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
 	for _, field := range mConfig.Fields {
 		if !mConfig.FieldConfig[field].PermitDisplayInTableMode {

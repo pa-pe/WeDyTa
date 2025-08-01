@@ -89,7 +89,7 @@ func (s *Service) renderAddForm(ctx *gin.Context, mConfig *model.ConfigOfModel, 
 		}
 		fmt.Printf("%s='%s'\n", fldCfg.Field, value)
 
-		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, nil, value)
+		labelTag, fieldTag := s.renderFormInputTag(&fldCfg, mConfig, nil, value)
 
 		formBuilder.WriteString("<div class=\"mb-3\">\n")
 		formBuilder.WriteString(labelTag + "\n")

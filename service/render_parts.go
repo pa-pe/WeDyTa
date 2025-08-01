@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, record map[string]interface{}, value interface{}) (string, string) {
+func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, mConfig *model.ConfigOfModel, record map[string]interface{}, value interface{}) (string, string) {
 	field := fldCfg.Field
 	var htmlTag strings.Builder
 
@@ -25,19 +25,19 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, record map[strin
 
 	labelTag := fmt.Sprintf("<label%s for=\"%s\" class=\"form-label\" id=\"header_of_%s\">%s</label>%s", titleStr, field, field, fldCfg.Header, requiredLabel)
 
+	var value_ interface{}
+	if record == nil {
+		value_ = value
+	} else {
+		value_ = takeFieldValueFromRecord(field, record)
+	}
+
 	switch fldCfg.FieldEditor {
 	case "textarea":
 		htmlTag.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s>%v</textarea>", field, field, requiredAttr, value))
 	case "input":
 		htmlTag.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\"%s>", field, field, value, requiredAttr))
 	case "select":
-		var value_ interface{}
-		if record == nil {
-			value_ = value
-		} else {
-			value_ = takeFieldValueFromRecord(field, record)
-		}
-
 		htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_, fldCfg.IsRequired)
 		if err != nil {
 			htmlTag.WriteString("oops")
@@ -46,6 +46,25 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, record map[strin
 		}
 	case "summernote":
 		htmlTag.WriteString(fmt.Sprintf("<textarea class=\"form-control\" id=\"%s\" name=\"%s\"%s>%v</textarea>", field, field, requiredAttr, value))
+	case "bs5switch":
+		var pkValue string
+		if record != nil {
+			pkValueI, exists := record[mConfig.DbTablePrimaryKey]
+			if exists {
+				pkValue = fmt.Sprintf("%v", pkValueI)
+			}
+		}
+
+		checked := ""
+		if fmt.Sprintf("%v", value_) == "1" {
+			checked = " checked"
+		}
+
+		disabled := " disabled"
+		if fldCfg.IsEditable {
+			disabled = ""
+		}
+		htmlTag.WriteString(fmt.Sprintf("<div class=\"form-check form-switch\"><input class=\"form-check-input\" type=\"checkbox\" role=\"switch\" name=\"%s\" rec_id=\"%s\" id=\"%s_%s\"%s%s></div>", field, pkValue, field, pkValue, checked, disabled))
 	default:
 		htmlTag.WriteString("oops, something went wrong")
 	}
