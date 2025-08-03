@@ -61,6 +61,12 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
+	fixCheckboxValue(insertData)
+
+	if !s.validateFieldValueType(ctx, mConfig, insertData) {
+		return
+	}
+
 	if s.Config.BeforeCreate != nil {
 		permitCreate, msg := s.Config.BeforeCreate(ctx, s.DB, mConfig.DbTable, insertData)
 		if !permitCreate {
