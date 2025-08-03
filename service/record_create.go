@@ -41,7 +41,7 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	// check RequiredFields
 	for _, requiredField := range mConfig.RequiredFields {
 		if value, exists := payload[requiredField]; !exists || value == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' is required", requiredField)})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("ValueField '%s' is required", requiredField)})
 			return
 		}
 	}
@@ -50,7 +50,7 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 	for _, noZeroField := range mConfig.NoZeroValueFields {
 		if value, exists := payload[noZeroField]; exists {
 			if number, ok := value.(float64); ok && number == 0 {
-				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' cannot be zero", noZeroField)})
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("ValueField '%s' cannot be zero", noZeroField)})
 				return
 			}
 		}

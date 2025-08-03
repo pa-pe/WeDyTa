@@ -74,7 +74,7 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 
 	if fldCfg.RelatedData != nil {
 		rdCfg := fldCfg.RelatedData
-		cacheKey := fmt.Sprintf("%s_%v", rdCfg.TableAndField, value)
+		cacheKey := fmt.Sprintf("%s.%s_%v", rdCfg.Table, rdCfg.ValueField, value)
 		if cachedValue, found := cache.RelatedData[cacheKey]; found {
 			value = cachedValue
 		} else {
@@ -83,14 +83,15 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 			if num != 0 {
 				var relatedValue string
 				err := s.DB.
-					Table(rdCfg.TableName).
-					Select(rdCfg.FieldName).
-					Where(fmt.Sprintf("%s = ?", rdCfg.KeyFieldName), value).
+					Table(rdCfg.Table).
+					Select(rdCfg.ValueField).
+					Where(fmt.Sprintf("%s = ?", rdCfg.KeyField), value).
+					Order(rdCfg.OrderBy).
 					Row().
 					Scan(&relatedValue)
 
 				if err != nil {
-					log.Printf("WeDyTa: failed to load related value from %s %s=%v err: %v", fldCfg.RelatedData.TableName, rdCfg.KeyFieldName, value, err)
+					log.Printf("WeDyTa: failed to load related value from %s %s=%v err: %v", fldCfg.RelatedData.Table, rdCfg.KeyField, value, err)
 					relatedValue = fmt.Sprintf("#%v", value)
 					value = relatedValue
 					cache.RelatedData[cacheKey] = relatedValue

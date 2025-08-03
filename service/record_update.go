@@ -100,7 +100,7 @@ func (s *Service) Update(ctx *gin.Context) {
 	for field, val := range updateData {
 		colType, ok := fieldTypes[field]
 		if !ok {
-			log.Printf("Wedyta: Field '%s' not found in TableColumnTypes", field)
+			log.Printf("Wedyta: ValueField '%s' not found in TableColumnTypes", field)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 			return
 		}
@@ -121,7 +121,7 @@ func (s *Service) Update(ctx *gin.Context) {
 
 			cleaned, ok := sqlutils.SanitizeNumericField(val)
 			if !ok {
-				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' expects a numeric value", mConfig.FieldConfig[field].Header)})
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("ValueField '%s' expects a numeric value", mConfig.FieldConfig[field].Header)})
 				return
 			}
 
@@ -132,7 +132,7 @@ func (s *Service) Update(ctx *gin.Context) {
 				if strings.TrimSpace(original) == cleanedStr {
 					updateData[field] = strings.TrimSpace(original)
 				} else {
-					ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' has invalid formatting (spaces or extra characters)", field)})
+					ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("ValueField '%s' has invalid formatting (spaces or extra characters)", field)})
 					return
 				}
 			}

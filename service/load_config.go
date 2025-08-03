@@ -135,28 +135,25 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 	}
 
 	// RelatedData
-	for field, relatedData := range mConfig.RelatedData {
-		//relatedData = utils.CamelToSnake(relatedData)
-		parts := strings.Split(relatedData, ".")
-		tableName := parts[0]
-		fieldName := parts[1]
-
-		if tableName != "" && fieldName != "" {
-
-			pkField, err := sqlutils.GetPrimaryKeyFieldName(s.DB, tableName)
-			if err != nil {
-				log.Printf("WeDyTa: can't determine primary key for table %s: %v", tableName, err)
-			} else {
-				param := mConfig.FieldConfig[field]
-				param.RelatedData = &model.RelatedDataConfig{
-					TableAndField: relatedData,
-					TableName:     tableName,
-					FieldName:     fieldName,
-					KeyFieldName:  pkField,
-				}
-				mConfig.FieldConfig[field] = param
-			}
+	for field, related := range mConfig.RelatedData {
+		if related.Table == "" || related.ValueField == "" {
+			log.Printf("WeDyTa: incomplete relatedData for field %s", field)
+			continue
 		}
+
+		if related.KeyField == "" {
+			pk, err := sqlutils.GetPrimaryKeyFieldName(s.DB, related.Table)
+			if err != nil {
+				log.Printf("WeDyTa: can't determine primary key for table %s: %v", related.Table, err)
+				continue
+			}
+			related.KeyField = pk
+		}
+
+		r := related // safe copy
+		param := mConfig.FieldConfig[field]
+		param.RelatedData = &r
+		mConfig.FieldConfig[field] = param
 	}
 
 	for _, field := range mConfig.Fields {

@@ -53,7 +53,7 @@ func (s *Service) CheckUploadPermission(ctx *gin.Context, req model.UploadCheckR
 	//// default false
 	//return model.UploadCheckResponse{
 	//	Allowed: false,
-	//	Message: fmt.Sprintf("Image upload not allowed for model %s, field %s.", req.Model, req.Field),
+	//	Message: fmt.Sprintf("Image upload not allowed for model %s, field %s.", req.Model, req.ValueField),
 	//}, nil
 }
 
