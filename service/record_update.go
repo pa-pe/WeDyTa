@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/utils"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"log"
 	"net/http"
 )
@@ -33,7 +34,7 @@ func (s *Service) Update(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println(payload)
+	fmt.Printf("payload=%v\n", payload)
 
 	id, err := getIdFromPayload(payload)
 	if err != nil {
@@ -64,17 +65,26 @@ func (s *Service) Update(ctx *gin.Context) {
 		return
 	}
 
-	fixCheckboxValue(updateData)
+	//fixCheckboxValue(updateData)
 
 	if !s.validateFieldValueType(ctx, mConfig, updateData) {
 		return
 	}
+
+	fmt.Printf("updateData=%v\n", updateData)
 
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
 	if err := s.DB.Table(mConfig.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
 		return
+	}
+
+	// changing dateTimeFields format
+	for field, value := range originalData {
+		if dateTimeFieldConfig, dateTimeFieldExists := mConfig.DateTimeFields[field]; dateTimeFieldExists {
+			originalData[field] = sqlutils.ExtractFormattedTime(value, dateTimeFieldConfig)
+		}
 	}
 
 	// filtering the same data
