@@ -310,12 +310,30 @@ $(document).ready(function () {
 });
 
 function serializeFormToJson(form) {
-    let formDataArray = form.serializeArray(); // Получаем массив объектов {name: 'key', value: 'value'}
     let formDataJson = {};
+    // This code skips disabled checkboxes
+    // let formDataArray = form.serializeArray(); // Получаем массив объектов {name: 'key', value: 'value'}
+    //
+    // $.each(formDataArray, function () {
+    //     formDataJson[this.name] = this.value; // Заполняем объект JSON
+    // });
 
-    $.each(formDataArray, function () {
-        formDataJson[this.name] = this.value; // Заполняем объект JSON
+    form.find('input, select, textarea').each(function () {
+        let name = $(this).attr('name');
+        if (!name) return;
+
+        if ($(this).attr('type') === 'checkbox') {
+            formDataJson[name] = $(this).is(':checked') ? 1 : 0;
+        } else if ($(this).attr('type') === 'radio') {
+            if ($(this).is(':checked')) {
+                formDataJson[name] = $(this).val();
+            }
+        } else {
+            formDataJson[name] = $(this).val();
+        }
     });
+
+    // console.log(formDataJson);
 
     return formDataJson; // Возвращаем JSON-объект
 }
