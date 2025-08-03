@@ -136,6 +136,32 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 
 	// RelatedData
 	for field, related := range mConfig.RelatedData {
+		if related.RawSql != "" {
+			parsed, ok := sqlutils.ParseRawSql(related.RawSql)
+			if !ok {
+				log.Printf("WeDyTa: can't parse RawSql for %s: %s", field, related.RawSql)
+				continue
+			}
+
+			if len(parsed.Fields) != 2 {
+				log.Printf("WeDyTa: RawSql must contain TWO fields in SELECT. %s: %s", field, related.RawSql)
+				continue
+			}
+
+			if parsed.Table == "" {
+				log.Printf("WeDyTa: RawSql must contain 'FROM table'. %s: %s", field, related.RawSql)
+				continue
+			}
+
+			prefixesToClean := []string{"DISTINCT "}
+
+			// Overwrite fields directly based on RawSql
+			related.Table = parsed.Table
+			related.KeyField = utils.CleanPrefixes(parsed.Fields[0], prefixesToClean)
+			related.ValueField = utils.CleanPrefixes(parsed.Fields[1], prefixesToClean)
+			related.OrderBy = parsed.OrderBy
+		}
+
 		if related.Table == "" || related.ValueField == "" {
 			log.Printf("WeDyTa: incomplete relatedData for field %s", field)
 			continue

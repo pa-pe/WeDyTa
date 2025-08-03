@@ -75,12 +75,20 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, mConfig *model.C
 func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataEntry, selected interface{}, required bool) (string, error) {
 	var records []map[string]interface{}
 
-	if err := s.DB.
-		Table(rdCfg.Table).
-		Select([]string{rdCfg.KeyField, rdCfg.ValueField}).
-		Order(rdCfg.OrderBy).
-		Find(&records).Error; err != nil {
-		return "", err
+	if rdCfg.RawSql != "" {
+		if err := s.DB.
+			Raw(rdCfg.RawSql).
+			Scan(&records).Error; err != nil {
+			return "", err
+		}
+	} else {
+		if err := s.DB.
+			Table(rdCfg.Table).
+			Select([]string{rdCfg.KeyField, rdCfg.ValueField}).
+			Order(rdCfg.OrderBy).
+			Find(&records).Error; err != nil {
+			return "", err
+		}
 	}
 
 	var htmlSelect strings.Builder
@@ -90,18 +98,18 @@ func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataEntry, selecte
 	}
 
 	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.KeyField + `"` + requiredAttr + `>` + "\n")
-	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "", "", ""))
+	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "0", "", ""))
 
 	for _, record := range records {
-		val := fmt.Sprint(record[rdCfg.KeyField])
+		id := fmt.Sprint(record[rdCfg.KeyField])
 		text := fmt.Sprint(record[rdCfg.ValueField])
 
 		selectedAttr := ""
-		if selected != nil && fmt.Sprint(selected) == val {
+		if selected != nil && fmt.Sprint(selected) == id {
 			selectedAttr = ` selected`
 		}
 
-		htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", html.EscapeString(val), selectedAttr, html.EscapeString(text)))
+		htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", html.EscapeString(id), selectedAttr, html.EscapeString(text)))
 	}
 
 	htmlSelect.WriteString(`</select>` + "\n")

@@ -95,15 +95,25 @@ type RelatedDataEntry struct {
 	ValueField string `json:"valueField"`
 	KeyField   string `json:"keyField,omitempty"`
 	OrderBy    string `json:"orderBy,omitempty"`
+	RawSql     string `json:"-"`
 }
 
 func (r *RelatedDataEntry) UnmarshalJSON(data []byte) error {
 	// simple format: "web_users.username"
+	// or RawSql: "SELECT key_field, value_field FROM table WHERE key_field='{{key_field_value}}' ORDER BY 1;"
 	var s string
 	if err := json.Unmarshal(data, &s); err == nil {
-		parts := strings.Split(s, ".")
+		trimmed := strings.TrimSpace(s)
+		lower := strings.ToLower(trimmed)
+
+		if strings.HasPrefix(lower, "select") {
+			r.RawSql = trimmed
+			return nil
+		}
+
+		parts := strings.Split(trimmed, ".")
 		if len(parts) != 2 {
-			return fmt.Errorf("invalid relatedData string format: %s", s)
+			return fmt.Errorf("invalid relatedData string format: %q", s)
 		}
 		r.Table = parts[0]
 		r.ValueField = parts[1]
