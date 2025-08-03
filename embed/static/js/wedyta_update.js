@@ -144,7 +144,9 @@ function bindSaveButton() {
         let success_update = await send_update_data(formDataJson);
         if (success_update) {
             let newContent = form.find('textarea, input[type="text"]').first().val(); // take first textarea or text input
-            currentTd.text(newContent);
+            if (currentTd){
+                currentTd.text(newContent);
+            }
         }
         $('#editModal').modal('hide');
 
