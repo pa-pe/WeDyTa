@@ -80,7 +80,9 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 		} else {
 			num := sqlutils.ExtractInt64(value)
 
-			if num != 0 {
+			if num == 0 {
+				value = ""
+			} else {
 				var relatedValue string
 				err := s.DB.
 					Table(rdCfg.Table).
