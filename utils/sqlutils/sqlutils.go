@@ -432,18 +432,19 @@ func ExtractFormattedTime(value any, outputFormat string) string {
 }
 
 type ParsedSql struct {
-	RawSql  string   // Исходный SQL
-	Fields  []string // Список полей из SELECT
-	Table   string   // FROM
-	Where   string   // WHERE (без "WHERE")
-	OrderBy string   // ORDER BY (без "ORDER BY")
+	RawSql  string   // Original raw SQL string
+	Fields  []string // Fields listed after SELECT
+	Table   string   // Table name after FROM
+	Where   string   // Optional WHERE clause (without "WHERE")
+	GroupBy string   // Optional GROUP BY clause (without "GROUP BY")
+	OrderBy string   // Optional ORDER BY clause (without "ORDER BY")
 }
 
-func ParseRawSql(raw string) (ParsedSql, bool) {
-	ps := ParsedSql{RawSql: raw}
+func ParseRawSql(raw string) (ps ParsedSql, success bool) {
+	ps = ParsedSql{RawSql: raw}
 	raw = strings.TrimSpace(raw)
 
-	re := regexp.MustCompile(`(?i)^select\s+(.+?)\s+from\s+(\w+)(?:\s+where\s+(.+?))?(?:\s+order\s+by\s+(.+?))?\s*;?\s*$`)
+	re := regexp.MustCompile(`(?i)^select\s+(.+?)\s+from\s+(\w+)(?:\s+where\s+(.+?))?(?:\s+group\s+by\s+(.+?))?(?:\s+order\s+by\s+(.+?))?\s*;?\s*$`)
 	matches := re.FindStringSubmatch(raw)
 	if len(matches) < 3 {
 		return ps, false
@@ -462,14 +463,19 @@ func ParseRawSql(raw string) (ParsedSql, bool) {
 	// FROM table
 	ps.Table = matches[2]
 
-	// WHERE (опционально)
+	// WHERE clause (optional)
 	if len(matches) >= 4 {
 		ps.Where = strings.TrimSpace(matches[3])
 	}
 
-	// ORDER BY (опционально)
+	// GROUP BY clause (optional)
 	if len(matches) >= 5 {
-		ps.OrderBy = strings.TrimSpace(matches[4])
+		ps.GroupBy = strings.TrimSpace(matches[4])
+	}
+
+	// ORDER BY clause (optional)
+	if len(matches) >= 6 {
+		ps.OrderBy = strings.TrimSpace(matches[5])
 	}
 
 	return ps, true
