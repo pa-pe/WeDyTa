@@ -85,12 +85,12 @@ func (s *Service) renderRecordValue(ctx *gin.Context, mConfig *model.ConfigOfMod
 				err := s.DB.
 					Table(rdCfg.TableName).
 					Select(rdCfg.FieldName).
-					Where(fmt.Sprintf("%s = ?", rdCfg.PrimaryKeyFieldName), value).
+					Where(fmt.Sprintf("%s = ?", rdCfg.KeyFieldName), value).
 					Row().
 					Scan(&relatedValue)
 
 				if err != nil {
-					log.Printf("WeDyTa: failed to load related value from %s %s=%v err: %v", fldCfg.RelatedData.TableName, rdCfg.PrimaryKeyFieldName, value, err)
+					log.Printf("WeDyTa: failed to load related value from %s %s=%v err: %v", fldCfg.RelatedData.TableName, rdCfg.KeyFieldName, value, err)
 					relatedValue = fmt.Sprintf("#%v", value)
 					value = relatedValue
 					cache.RelatedData[cacheKey] = relatedValue

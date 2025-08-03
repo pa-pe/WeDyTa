@@ -149,10 +149,10 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 			} else {
 				param := mConfig.FieldConfig[field]
 				param.RelatedData = &model.RelatedDataConfig{
-					TableAndField:       relatedData,
-					TableName:           tableName,
-					FieldName:           fieldName,
-					PrimaryKeyFieldName: pkField,
+					TableAndField: relatedData,
+					TableName:     tableName,
+					FieldName:     fieldName,
+					KeyFieldName:  pkField,
 				}
 				mConfig.FieldConfig[field] = param
 			}

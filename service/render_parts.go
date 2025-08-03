@@ -77,7 +77,7 @@ func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataConfig, select
 
 	if err := s.DB.
 		Table(rdCfg.TableName).
-		Select([]string{rdCfg.PrimaryKeyFieldName, rdCfg.FieldName}).
+		Select([]string{rdCfg.KeyFieldName, rdCfg.FieldName}).
 		Find(&records).Error; err != nil {
 		return "", err
 	}
@@ -88,11 +88,11 @@ func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataConfig, select
 		requiredAttr = " required"
 	}
 
-	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.PrimaryKeyFieldName + `"` + requiredAttr + `>` + "\n")
+	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.KeyFieldName + `"` + requiredAttr + `>` + "\n")
 	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "", "", ""))
 
 	for _, record := range records {
-		val := fmt.Sprint(record[rdCfg.PrimaryKeyFieldName])
+		val := fmt.Sprint(record[rdCfg.KeyFieldName])
 		text := fmt.Sprint(record[rdCfg.FieldName])
 
 		selectedAttr := ""

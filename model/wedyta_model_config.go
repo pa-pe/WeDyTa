@@ -77,10 +77,10 @@ type RenderTableCache struct {
 }
 
 type RelatedDataConfig struct {
-	TableAndField       string
-	TableName           string
-	FieldName           string
-	PrimaryKeyFieldName string
+	TableAndField string
+	TableName     string
+	FieldName     string
+	KeyFieldName  string
 }
 
 type BreadcrumbConfig struct {
