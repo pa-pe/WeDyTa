@@ -61,7 +61,7 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		return
 	}
 
-	fixCheckboxValue(insertData)
+	//fixCheckboxValue(insertData)
 
 	if !s.validateFieldValueType(ctx, mConfig, insertData) {
 		return
