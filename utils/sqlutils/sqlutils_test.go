@@ -4,6 +4,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -94,6 +95,66 @@ func TestGetTableColumnTypes_SQLite(t *testing.T) {
 			t.Errorf("column %s not found in results", col)
 		} else if gotType != expectedType {
 			t.Errorf("expected type of %s to be %s, got %s", col, expectedType, gotType)
+		}
+	}
+}
+
+func TestParseRawSql(t *testing.T) {
+	tests := []struct {
+		raw     string
+		success bool
+		expect  ParsedSql
+	}{
+		{
+			raw:     "SELECT id, name FROM users WHERE active = 1 ORDER BY name;",
+			success: true,
+			expect: ParsedSql{
+				RawSql:  "SELECT id, name FROM users WHERE active = 1 ORDER BY name;",
+				Fields:  []string{"id", "name"},
+				Table:   "users",
+				Where:   "active = 1",
+				OrderBy: "name",
+			},
+		},
+		{
+			raw:     "SELECT user_id, username FROM web_users ORDER BY username",
+			success: true,
+			expect: ParsedSql{
+				RawSql:  "SELECT user_id, username FROM web_users ORDER BY username",
+				Fields:  []string{"user_id", "username"},
+				Table:   "web_users",
+				OrderBy: "username",
+			},
+		},
+		{
+			raw:     "SELECT a, b FROM table;",
+			success: true,
+			expect: ParsedSql{
+				RawSql: "SELECT a, b FROM table;",
+				Fields: []string{"a", "b"},
+				Table:  "table",
+			},
+		},
+		{
+			raw:     "SELECT onlyone FROM test;",
+			success: false,
+		},
+		{
+			raw:     "invalid syntax",
+			success: false,
+		},
+	}
+
+	for i, tt := range tests {
+		got, ok := ParseRawSql(tt.raw)
+		if ok != tt.success {
+			t.Errorf("test %d: expected success %v, got %v", i, tt.success, ok)
+			continue
+		}
+		if ok {
+			if !reflect.DeepEqual(got, tt.expect) {
+				t.Errorf("test %d: expected %+v, got %+v", i, tt.expect, got)
+			}
 		}
 	}
 }

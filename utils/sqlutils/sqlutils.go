@@ -6,6 +6,7 @@ import (
 	"github.com/pa-pe/wedyta/model"
 	"gorm.io/gorm"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -428,4 +429,48 @@ func ExtractFormattedTime(value any, outputFormat string) string {
 	default:
 		return fmt.Sprintf("%v", value)
 	}
+}
+
+type ParsedSql struct {
+	RawSql  string   // Исходный SQL
+	Fields  []string // Список полей из SELECT
+	Table   string   // FROM
+	Where   string   // WHERE (без "WHERE")
+	OrderBy string   // ORDER BY (без "ORDER BY")
+}
+
+func ParseRawSql(raw string) (ParsedSql, bool) {
+	ps := ParsedSql{RawSql: raw}
+	raw = strings.TrimSpace(raw)
+
+	re := regexp.MustCompile(`(?i)^select\s+(.+?)\s+from\s+(\w+)(?:\s+where\s+(.+?))?(?:\s+order\s+by\s+(.+?))?\s*;?\s*$`)
+	matches := re.FindStringSubmatch(raw)
+	if len(matches) < 3 {
+		return ps, false
+	}
+
+	// SELECT fields
+	fields := strings.Split(matches[1], ",")
+	for i := range fields {
+		fields[i] = strings.TrimSpace(fields[i])
+	}
+	if len(fields) < 2 {
+		return ps, false
+	}
+	ps.Fields = fields
+
+	// FROM table
+	ps.Table = matches[2]
+
+	// WHERE (опционально)
+	if len(matches) >= 4 {
+		ps.Where = strings.TrimSpace(matches[3])
+	}
+
+	// ORDER BY (опционально)
+	if len(matches) >= 5 {
+		ps.OrderBy = strings.TrimSpace(matches[4])
+	}
+
+	return ps, true
 }
