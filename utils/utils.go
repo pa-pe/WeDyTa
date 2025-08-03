@@ -41,3 +41,15 @@ func IsCamelCase(input string) bool {
 	}
 	return false
 }
+
+func CleanPrefixes(s string, prefixes []string) string {
+	s = strings.TrimSpace(s)
+	upper := strings.ToUpper(s)
+	for _, prefix := range prefixes {
+		prefixUpper := strings.ToUpper(prefix)
+		if strings.HasPrefix(upper, prefixUpper) {
+			return strings.TrimSpace(s[len(prefix):])
+		}
+	}
+	return s
+}
