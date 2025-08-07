@@ -221,6 +221,10 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 			param.FieldEditor = "select"
 		}
 
+		if _, exist := mConfig.Password[field]; exist {
+			param.IsPassword = true
+		}
+
 		mConfig.FieldConfig[field] = param
 
 		if field == "is_active" {
@@ -285,13 +289,6 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 				param.FieldEditor = "input"
 			}
 		}
-		mConfig.FieldConfig[field] = param
-	}
-
-	// Password
-	for _, field := range mConfig.Password {
-		param := mConfig.FieldConfig[field]
-		param.IsPassword = true
 		mConfig.FieldConfig[field] = param
 	}
 

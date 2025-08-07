@@ -25,7 +25,7 @@ type ConfigOfModel struct {
 	EditableFields      []string                          `json:"editableFields"`
 	FieldEditor         map[string]map[string]interface{} `json:"fieldsEditor"`
 	NoZeroValueFields   []string                          `json:"noZeroValueFields"`
-	Password            []string                          `json:"password"`
+	Password            map[string]map[string]string      `json:"password"`
 	ColumnDataFunc      map[string]string                 `json:"columnDataFunc"`
 	CountRelatedData    map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links               map[string]LinkConfig             `json:"links"`
