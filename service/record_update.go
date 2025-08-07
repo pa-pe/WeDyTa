@@ -2,11 +2,12 @@ package service
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/utils"
 	"github.com/pa-pe/wedyta/utils/sqlutils"
-	"log"
-	"net/http"
 )
 
 // Update updates the fields of a specified model based on the allowedFields
@@ -101,6 +102,18 @@ func (s *Service) Update(ctx *gin.Context) {
 	if len(updateData) == 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No new data for update"})
 		return
+	}
+
+	for field, val := range updateData {
+		fldCfg := mConfig.FieldConfig[field]
+		if fldCfg.IsPassword {
+			encryptedPassword, err := s.Config.EncryptPlainPasswordFunc(ctx, mConfig.DbTable, field, updateData, val.(string))
+			if err != nil {
+				log.Printf("HandleTableCreateRecord: Error encrypting password for field '%s': %v", field, err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			}
+			updateData[field] = encryptedPassword
+		}
 	}
 
 	if err := s.DB.Table(mConfig.DbTable).Where(fmt.Sprint("id = ", id)).Updates(updateData).Error; err != nil {

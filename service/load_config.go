@@ -3,14 +3,15 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pa-pe/wedyta/model"
-	"github.com/pa-pe/wedyta/utils"
-	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"log"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 )
 
 func (s *Service) loadModelConfig(ctx *gin.Context, modelName string, payload map[string]interface{}) *model.ConfigOfModel {
@@ -284,6 +285,13 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 				param.FieldEditor = "input"
 			}
 		}
+		mConfig.FieldConfig[field] = param
+	}
+
+	// Password
+	for _, field := range mConfig.Password {
+		param := mConfig.FieldConfig[field]
+		param.IsPassword = true
 		mConfig.FieldConfig[field] = param
 	}
 

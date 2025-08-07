@@ -60,6 +60,12 @@ type WedytaConfig struct {
 	// each row based on record data, user context, or other dynamic logic.
 	DynamicColumnDataFunc func(context *gin.Context, db *gorm.DB, table string, field string, record map[string]interface{}) string
 
+	// EncryptPlainPasswordFunc allows custom encryption of plain text passwords
+	// before storing them in the database. This function takes a raw password string
+	// and returns its encrypted form, enabling integration with different hashing
+	// or encryption strategies such as bcrypt, scrypt, or custom algorithms.
+	EncryptPlainPasswordFunc func(context *gin.Context, table string, field string, record map[string]interface{}, plainPassword string) (string, error)
+
 	// JQueryScriptTag default: <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	JQueryScriptTag string
 

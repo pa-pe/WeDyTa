@@ -17,6 +17,8 @@ tr.disabled {
     --bs-table-striped-color: inherit;
 }
 
+.table-model-records { width: auto; }
+
 .white-space-pre { white-space: pre; }
 .white-space-break { white-space: break-spaces; }
 

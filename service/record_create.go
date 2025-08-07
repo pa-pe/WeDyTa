@@ -2,10 +2,12 @@ package service
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pa-pe/wedyta/utils"
+	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/utils"
 )
 
 func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
@@ -72,6 +74,18 @@ func (s *Service) HandleTableCreateRecord(ctx *gin.Context) {
 		if !permitCreate {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": msg})
 			return
+		}
+	}
+
+	for field, val := range insertData {
+		fldCfg := mConfig.FieldConfig[field]
+		if fldCfg.IsPassword {
+			encryptedPassword, err := s.Config.EncryptPlainPasswordFunc(ctx, mConfig.DbTable, field, insertData, val.(string))
+			if err != nil {
+				log.Printf("HandleTableCreateRecord: Error encrypting password for field '%s': %v", field, err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			}
+			insertData[field] = encryptedPassword
 		}
 	}
 
