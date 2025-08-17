@@ -2,9 +2,10 @@ package service
 
 import (
 	"fmt"
-	"github.com/pa-pe/wedyta/model"
 	"html"
 	"strings"
+
+	"github.com/pa-pe/wedyta/model"
 )
 
 func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, mConfig *model.ConfigOfModel, record map[string]interface{}, value interface{}) (string, string) {
@@ -38,7 +39,7 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, mConfig *model.C
 	case "input":
 		htmlTag.WriteString(fmt.Sprintf("<input class=\"form-control\" type=\"text\" id=\"%s\" name=\"%s\" value=\"%v\"%s>", field, field, value, requiredAttr))
 	case "select":
-		htmlSelect, err := s.RenderRelatedDataSelect(fldCfg.RelatedData, value_, fldCfg.IsRequired)
+		htmlSelect, err := s.RenderRelatedDataSelect(fldCfg, value_)
 		if err != nil {
 			htmlTag.WriteString("oops")
 		} else {
@@ -72,8 +73,10 @@ func (s *Service) renderFormInputTag(fldCfg *model.FieldParams, mConfig *model.C
 	return labelTag, htmlTag.String()
 }
 
-func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataEntry, selected interface{}, required bool) (string, error) {
+func (s *Service) RenderRelatedDataSelect(fldCfg *model.FieldParams, selected interface{}) (string, error) {
 	var records []map[string]interface{}
+
+	rdCfg := fldCfg.RelatedData
 
 	if rdCfg.RawSql != "" {
 		if err := s.DB.
@@ -93,11 +96,11 @@ func (s *Service) RenderRelatedDataSelect(rdCfg *model.RelatedDataEntry, selecte
 
 	var htmlSelect strings.Builder
 	requiredAttr := ""
-	if required {
+	if fldCfg.IsRequired {
 		requiredAttr = " required"
 	}
 
-	htmlSelect.WriteString(`<select class="form-select" name="` + rdCfg.KeyField + `"` + requiredAttr + `>` + "\n")
+	htmlSelect.WriteString(`<select class="form-select" name="` + fldCfg.Field + `"` + requiredAttr + `>` + "\n")
 	htmlSelect.WriteString(fmt.Sprintf(`<option value="%s"%s>%s</option>`+"\n", "0", "", ""))
 
 	for _, record := range records {
