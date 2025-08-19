@@ -3,13 +3,14 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pa-pe/wedyta/model"
-	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/wedyta/model"
+	"github.com/pa-pe/wedyta/utils/sqlutils"
 )
 
 func extractIsActive(record map[string]interface{}) bool {
@@ -24,7 +25,7 @@ func extractIsActive(record map[string]interface{}) bool {
 	return true
 }
 
-func getIdFromPayload(payload map[string]interface{}) (float64, error) {
+func getIdFromPayload(payload map[string]interface{}) (int64, error) {
 	id, ok := payload["id"].(float64)
 	if !ok {
 		idStr, ok := payload["id"].(string)
@@ -39,7 +40,7 @@ func getIdFromPayload(payload map[string]interface{}) (float64, error) {
 		id = float64(idFromStr)
 	}
 
-	return id, nil
+	return int64(id), nil
 }
 
 func fixCheckboxValue(data map[string]interface{}) {

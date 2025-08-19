@@ -42,6 +42,7 @@ func (s *Service) Update(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Printf("id=%d\n", id)
 
 	var allowed []string
 
@@ -54,10 +55,10 @@ func (s *Service) Update(ctx *gin.Context) {
 		fieldSnaked := utils.CamelToSnake(field)
 		if value, exists := payload[fieldSnaked]; exists {
 			updateData[fieldSnaked] = value
-			allowed = append(allowed, fieldSnaked)
+			allowed = append(allowed, "`"+fieldSnaked+"`")
 		} else if value, exists := payload[field]; exists {
 			updateData[fieldSnaked] = value
-			allowed = append(allowed, fieldSnaked)
+			allowed = append(allowed, "`"+fieldSnaked+"`")
 		}
 	}
 
@@ -76,7 +77,7 @@ func (s *Service) Update(ctx *gin.Context) {
 
 	// Retrieve original values for fields to be updated
 	originalData := make(map[string]interface{})
-	if err := s.DB.Table(mConfig.DbTable).Where("id = ?", int64(id)).Select(allowed).Take(&originalData).Error; err != nil {
+	if err := s.DB.Table(mConfig.DbTable).Where("id = ?", id).Select(allowed).Take(&originalData).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve original data"})
 		return
 	}
