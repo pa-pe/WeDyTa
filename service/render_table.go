@@ -2,13 +2,14 @@ package service
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/wedyta/model"
 	"github.com/pa-pe/wedyta/utils/sqlutils"
 	"gorm.io/gorm"
-	"log"
-	"strconv"
-	"strings"
 )
 
 func (s *Service) RenderTable(ctx *gin.Context) {
@@ -70,7 +71,11 @@ func (s *Service) RenderModelTable(ctx *gin.Context, db *gorm.DB, mConfig *model
 
 	htmlTable.WriteString(`<` + s.Config.HeadersTag + `>` + mConfig.PageTitle + `</` + s.Config.HeadersTag + `>` + "\n")
 	htmlTable.WriteString(s.breadcrumbBuilder(mConfig, "", "read records"))
-	htmlTable.WriteString(s.wrapBsAccordion(s.renderAddForm(ctx, mConfig, "refresh_page"), "", "Add New Record"))
+
+	addForm := s.renderAddForm(ctx, mConfig, "refresh_page")
+	if addForm != "" {
+		htmlTable.WriteString(s.wrapBsAccordion(addForm, "", "Add New Record"))
+	}
 
 	htmlTable.WriteString("<table class='table table-striped mt-3 table-model-records' model='" + mConfig.ModelName + "'>\n<thead>\n<tr>\n")
 
