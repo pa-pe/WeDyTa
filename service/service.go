@@ -56,8 +56,10 @@ func NewService(db *gorm.DB, wedytaConfig *model.WedytaConfig) *Service {
 	}
 
 	if wedytaConfig.SummernoteInitTags == "" {
-		wedytaConfig.SummernoteInitTags = "<link href=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.css\" rel=\"stylesheet\">\n"
-		wedytaConfig.SummernoteInitTags += "<script src=\"https://cdn.jsdelivr.net/npm/summernote@0.9.1/dist/summernote.min.js\"></script>\n"
+		wedytaConfig.SummernoteInitTags = `
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.9.1/summernote-bs5.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.9.1/summernote-bs5.min.js"></script>
+`
 	}
 	wedytaConfig.SummernoteInitTags += "<script src=\"/wedyta/static/js/wedyta_init_summernote.js\"></script>\n"
 
