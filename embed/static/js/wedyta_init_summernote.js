@@ -1,4 +1,4 @@
-function initSummernote(field, modelName, options) {
+function initSummernote(field, modelName, options = {}, extraOptions = {}) {
     const defaultOptions = {
         height: 300,
         callbacks: {
@@ -52,7 +52,21 @@ function initSummernote(field, modelName, options) {
         }
     };
 
-    const mergedOptions = {...defaultOptions, ...options};
+    // let parsedStringOptions = {};
+    // if (stringOptions && typeof stringOptions === "string") {
+    //     try {
+    //         // пробуем превратить в объект
+    //         parsedStringOptions = eval("({" + stringOptions + "})");
+    //     } catch (e) {
+    //         console.error("Ошибка парсинга stringOptions:", e);
+    //     }
+    // }
+
+    const mergedOptions = {
+        ...defaultOptions,
+        ...options,
+        ...extraOptions
+    };
 
     $('#' + field).summernote(mergedOptions);
 }

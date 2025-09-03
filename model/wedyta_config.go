@@ -73,4 +73,6 @@ type WedytaConfig struct {
 	// <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.9.1/summernote-bs5.min.css">
 	// <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.9.1/summernote-bs5.min.js"></script>
 	SummernoteInitTags string
+
+	SummernoteDefaultParams string
 }

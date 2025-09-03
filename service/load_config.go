@@ -260,7 +260,7 @@ func (s *Service) fillFieldConfig(mConfig *model.ConfigOfModel) {
 			if !strings.Contains(mConfig.AdditionalScripts, s.Config.SummernoteInitTags) {
 				mConfig.AdditionalScripts += s.Config.SummernoteInitTags
 			}
-			mConfig.AdditionalScripts += summernoteConfig(mConfig.ModelName, field, editorCfg)
+			mConfig.AdditionalScripts += s.summernoteConfig(mConfig.ModelName, field, editorCfg)
 		}
 	}
 
@@ -351,7 +351,7 @@ func (s *Service) resolveVariables(ctx *gin.Context, modelName string, str strin
 	return str
 }
 
-func summernoteConfig(modelName, field string, editorConfig map[string]interface{}) string {
+func (s *Service) summernoteConfig(modelName, field string, editorConfig map[string]interface{}) string {
 	delete(editorConfig, "type")
 
 	jsConfigBytes, _ := json.Marshal(editorConfig)
@@ -360,7 +360,7 @@ func summernoteConfig(modelName, field string, editorConfig map[string]interface
 	return `
 <script>
 $(document).ready(function() {
-	initSummernote("` + field + `", "` + modelName + `", ` + jsConfig + `);
+    initSummernote("` + field + `", "` + modelName + `", ` + jsConfig + `, ` + s.Config.SummernoteDefaultParams + `);
 });
 </script>
 `
